@@ -111,12 +111,23 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
         }
 
     def _render_final_report(self) -> str:
+        affected_ids = list(self.state.affected_repos)
+        if not affected_ids and self.state.route in ("din_core", "react_din", "din_studio"):
+            affected_ids = [self.state.route]
+        reasons = list(self.state.reasons)
+        if not reasons:
+            reasons = [f"Route `{self.state.route}` (no reasons captured in flow state)."]
+
         decision = RoutingDecision(
             route=self.state.route,
-            affected_repos=self.state.affected_repos,
+            affected_repos=affected_ids,
             cross_repo=self.state.cross_repo,
-            reasons=self.state.reasons,
+            reasons=reasons,
         )
+
+        quality_commands = dict(self.state.quality_commands)
+        for repo_id, commands in select_quality_gates(affected_ids).items():
+            quality_commands.setdefault(repo_id, commands)
 
         sections: list[str] = [
             "# DIN Control Plane Report",
@@ -132,7 +143,7 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
             "## Repo Briefs",
         ]
 
-        for repo_id in self.state.affected_repos:
+        for repo_id in affected_ids:
             profile = get_repo_profile(repo_id)
             sections.extend(
                 [
@@ -143,10 +154,10 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
             )
 
         sections.extend(["## Quality Gates"])
-        for repo_id in self.state.affected_repos:
+        for repo_id in affected_ids:
             profile = get_repo_profile(repo_id)
             sections.append(f"### {profile.display_name}")
-            for command in self.state.quality_commands.get(repo_id, []):
+            for command in quality_commands.get(repo_id, []):
                 sections.append(f"- `{command}`")
             sections.append("")
 

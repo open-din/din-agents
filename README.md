@@ -83,6 +83,31 @@ Or run a specific request:
 uv run run_request "Plan a node catalog change that affects din-studio and react-din"
 ```
 
+Practical CLI flags (see also `.env.example`):
+
+```bash
+# Less CrewAI banner/tool noise; full markdown report still prints
+uv run run_request -q "Your request"
+
+# Custom report path
+uv run run_request -o /tmp/din-brief.md "Your request"
+
+# Only write the file (useful in scripts)
+uv run run_request --no-print -o /tmp/din-brief.md "Your request"
+```
+
+Tasks include a **terminal output contract** (full markdown, no “I will analyze…” stubs, tools before answers where required). The din-studio MCP review step has a **scope guard** so generic git/hooks work is not treated as `targets/mcp` work.
+
+`run_request` **does not run shell commands** in your sibling repos—it only asks LLMs for a Markdown brief. To **actually install** local pre-commit automation:
+
+```bash
+./scripts/bootstrap-pre-commit-hooks.sh
+```
+
+This writes **din-core** `.git/hooks/pre-commit` (`cargo fmt --all --check`, `clippy`, `test --workspace`) and **react-din** / **din-studio** Husky `.husky/pre-commit` (`npm test`). Paths use `DIN_CORE_PATH`, `REACT_DIN_PATH`, `DIN_STUDIO_PATH` or defaults next to `din-agents`. The legacy script name `bootstrap-husky-node-repos.sh` still works and forwards here.
+
+Requests like “for each project, install Husky…” **route cross-repo** so three crews plan all siblings (the install script is separate from `run_request`).
+
 Or set request inputs explicitly:
 
 ```bash
@@ -143,6 +168,9 @@ uv run pytest
 Example user requests (copy/paste for `run_request`): see [`din-agent/`](din-agent/README.md).
 
 ```text
+scripts/
+  bootstrap-pre-commit-hooks.sh
+  bootstrap-husky-node-repos.sh  # legacy wrapper
 src/din_agents/
   crews/
     din_core/

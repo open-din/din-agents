@@ -2,6 +2,7 @@ from crewai import Agent, Crew, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
+from din_agents.shared.cli_prefs import cli_verbose, with_cli_task_config
 from din_agents.shared.model_routing import agent_llm_kwargs
 from din_agents.tools import ChangeBriefTool, QualityGateTool, RepoContractTool
 
@@ -21,7 +22,7 @@ class ReactDinCrew:
         return Agent(
             config=self.agents_config["patch_schema_steward"],  # type: ignore[index]
             tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
-            verbose=True,
+            verbose=cli_verbose(),
             **agent_llm_kwargs("binding"),
         )
 
@@ -30,7 +31,7 @@ class ReactDinCrew:
         return Agent(
             config=self.agents_config["component_coverage_maintainer"],  # type: ignore[index]
             tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
-            verbose=True,
+            verbose=cli_verbose(),
             **agent_llm_kwargs("impact"),
         )
 
@@ -39,26 +40,26 @@ class ReactDinCrew:
         return Agent(
             config=self.agents_config["library_quality_runner"],  # type: ignore[index]
             tools=[RepoContractTool(), QualityGateTool()],
-            verbose=True,
+            verbose=cli_verbose(),
             **agent_llm_kwargs("testing"),
         )
 
     @task
     def assess_public_surface(self) -> Task:
         return Task(
-            config=self.tasks_config["assess_public_surface"],  # type: ignore[index]
+            config=with_cli_task_config(self.tasks_config["assess_public_surface"]),  # type: ignore[index]
         )
 
     @task
     def review_docs_and_coverage(self) -> Task:
         return Task(
-            config=self.tasks_config["review_docs_and_coverage"],  # type: ignore[index]
+            config=with_cli_task_config(self.tasks_config["review_docs_and_coverage"]),  # type: ignore[index]
         )
 
     @task
     def plan_library_validation(self) -> Task:
         return Task(
-            config=self.tasks_config["plan_library_validation"],  # type: ignore[index]
+            config=with_cli_task_config(self.tasks_config["plan_library_validation"]),  # type: ignore[index]
         )
 
     @crew
@@ -67,5 +68,5 @@ class ReactDinCrew:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
-            verbose=True,
+            verbose=cli_verbose(),
         )

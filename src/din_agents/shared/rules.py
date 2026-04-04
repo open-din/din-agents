@@ -16,6 +16,44 @@ REPO_ALIASES = {
     "din_studio": "din_studio",
 }
 
+ALL_REPO_IDS: tuple[str, ...] = ("din_core", "react_din", "din_studio")
+
+_MULTI_REPO_SCOPE_PHRASES = (
+    "each project",
+    "each projects",
+    "each repo",
+    "all projects",
+    "all repos",
+    "every project",
+    "every repo",
+    "for all three",
+    "all three repos",
+    "across all",
+)
+
+_REPO_WIDE_TOOLING_HINTS = (
+    "husky",
+    "pre-commit",
+    "precommit",
+    "git hook",
+    "git hooks",
+)
+
+
+def _mentions_multi_repo_scope(lowered: str) -> bool:
+    if any(p in lowered for p in _MULTI_REPO_SCOPE_PHRASES):
+        return True
+    if "each" in lowered and ("project" in lowered or "repo" in lowered):
+        return True
+    if "all" in lowered and ("project" in lowered or "repo" in lowered):
+        return True
+    return False
+
+
+def _mentions_repo_tooling(lowered: str) -> bool:
+    return any(h in lowered for h in _REPO_WIDE_TOOLING_HINTS)
+
+
 CROSS_REPO_KEYWORDS = (
     "cross-repo",
     "cross repo",
@@ -79,6 +117,12 @@ def route_request(request: str, repo_hint: str | None = None) -> RoutingDecision
 
     primary_repo = max(scores, key=scores.get) if scores else "din_studio"
     affected_repos = list(dict.fromkeys(mentioned or [primary_repo]))
+
+    if _mentions_multi_repo_scope(lowered) and _mentions_repo_tooling(lowered):
+        affected_repos = list(ALL_REPO_IDS)
+        reasons.append(
+            "Request applies tooling across DIN repos; routing all siblings (din-core, react-din, din-studio)."
+        )
 
     if any(keyword in lowered for keyword in CROSS_REPO_KEYWORDS):
         if primary_repo in {"din_core", "react_din"}:

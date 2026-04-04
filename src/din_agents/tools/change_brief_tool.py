@@ -21,6 +21,8 @@ class ChangeBriefTool(BaseTool):
     name: str = "change_brief_builder"
     description: str = (
         "Summarize routing and cross-repo impact for a DIN change request. "
+        "Pass the **full verbatim** user request as `request` (same text as in the task), "
+        "not a shortened or generic phrase. "
         "Use when a task needs a deterministic ownership and escalation brief."
     )
     args_schema: Type[BaseModel] = ChangeBriefToolInput

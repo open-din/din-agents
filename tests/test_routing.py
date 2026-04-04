@@ -25,3 +25,12 @@ def test_escalates_patch_schema_request_across_repos():
     assert decision.cross_repo is True
     assert "din_core" in decision.affected_repos
     assert "react_din" in decision.affected_repos
+
+
+def test_husky_for_each_project_routes_all_repos():
+    decision = route_request(
+        "For each project, install Husky pre-commit hook that runs tests before commit.",
+    )
+    assert decision.route == "cross_repo"
+    assert decision.cross_repo is True
+    assert decision.affected_repos == ["din_core", "react_din", "din_studio"]
