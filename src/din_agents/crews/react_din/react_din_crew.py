@@ -3,8 +3,8 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
 from din_agents.shared.cli_prefs import cli_verbose, with_cli_task_config
+from din_agents.shared.crew_tools import tools_with_change_brief, tools_without_change_brief
 from din_agents.shared.model_routing import agent_llm_kwargs
-from din_agents.tools import ChangeBriefTool, QualityGateTool, RepoContractTool
 
 
 @CrewBase
@@ -21,7 +21,7 @@ class ReactDinCrew:
     def patch_schema_steward(self) -> Agent:
         return Agent(
             config=self.agents_config["patch_schema_steward"],  # type: ignore[index]
-            tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
+            tools=tools_with_change_brief("react_din"),
             verbose=cli_verbose(),
             **agent_llm_kwargs("binding"),
         )
@@ -30,7 +30,7 @@ class ReactDinCrew:
     def component_coverage_maintainer(self) -> Agent:
         return Agent(
             config=self.agents_config["component_coverage_maintainer"],  # type: ignore[index]
-            tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
+            tools=tools_with_change_brief("react_din"),
             verbose=cli_verbose(),
             **agent_llm_kwargs("impact"),
         )
@@ -39,7 +39,7 @@ class ReactDinCrew:
     def library_quality_runner(self) -> Agent:
         return Agent(
             config=self.agents_config["library_quality_runner"],  # type: ignore[index]
-            tools=[RepoContractTool(), QualityGateTool()],
+            tools=tools_without_change_brief("react_din"),
             verbose=cli_verbose(),
             **agent_llm_kwargs("testing"),
         )

@@ -9,16 +9,16 @@ from din_agents.flow import DinControlPlaneFlow
 
 
 def _dedupe_control_plane_report(text: str) -> str:
-    """CrewAI sometimes emits the same markdown twice; collapse exact back-to-back duplicates."""
-    t = text
-    if len(t) < 80:
-        return t
-    if len(t) % 2 != 0:
-        return t
-    half = len(t) // 2
-    if t[:half] == t[half:]:
-        return t[:half]
-    return t
+    """Drop a repeated final report when the same document is concatenated twice."""
+    marker = "# DIN Control Plane Report"
+    first = text.find(marker)
+    if first == -1:
+        return text
+    second = text.find(marker, first + len(marker))
+    if second == -1:
+        return text
+    return text[:second].rstrip() + "\n"
+
 
 
 def run_request(

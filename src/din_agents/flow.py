@@ -4,6 +4,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from crewai.crews.crew_output import CrewOutput
 from crewai.flow.flow import Flow, listen, or_, router, start
 
 from din_agents.crews.din_core import DinCoreCrew
@@ -11,6 +12,20 @@ from din_agents.crews.din_studio import DinStudioCrew
 from din_agents.crews.react_din import ReactDinCrew
 from din_agents.shared.repo_profiles import get_repo_profile
 from din_agents.shared.rules import RoutingDecision, render_routing_decision, route_request, select_quality_gates
+
+
+def _crew_tasks_markdown(result: CrewOutput) -> str:
+    """Use every sequential task output; ``result.raw`` is often only the final task."""
+    if result.tasks_output:
+        chunks: list[str] = []
+        for task_out in result.tasks_output:
+            label = (task_out.name or "task").strip() or "task"
+            body = (task_out.raw or "").strip()
+            if body:
+                chunks.append(f"#### Task: `{label}`\n\n{body}")
+        if chunks:
+            return "\n\n---\n\n".join(chunks)
+    return (result.raw or "").strip()
 
 
 class ControlPlaneState(BaseModel):
@@ -95,7 +110,10 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
         }
         crew_cls = crew_map[repo_id]
         result = crew_cls().crew().kickoff(inputs=self._crew_inputs(repo_id))
-        self.state.repo_outputs[repo_id] = result.raw
+        if not isinstance(result, CrewOutput):
+            self.state.repo_outputs[repo_id] = str(result)
+        else:
+            self.state.repo_outputs[repo_id] = _crew_tasks_markdown(result)
 
     def _crew_inputs(self, repo_id: str) -> dict[str, str]:
         profile = get_repo_profile(repo_id)

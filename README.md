@@ -98,7 +98,9 @@ uv run run_request --no-print -o /tmp/din-brief.md "Your request"
 
 Tasks include a **terminal output contract** (full markdown, no “I will analyze…” stubs, tools before answers where required). The din-studio MCP review step has a **scope guard** so generic git/hooks work is not treated as `targets/mcp` work.
 
-`run_request` **does not run shell commands** in your sibling repos—it only asks LLMs for a Markdown brief. To **actually install** local pre-commit automation:
+Each repo crew exposes a **`write_<repo>_repo_file`** tool: the model can create or overwrite **one file at a time** under the matching `DIN_CORE_PATH`, `REACT_DIN_PATH`, or `DIN_STUDIO_PATH` using a **relative path** (no `..`). Set `DIN_AGENTS_REPO_WRITE=0` to disable writes. This is separate from shell execution: agents still do not run arbitrary shell in sibling repos unless you add such a tool.
+
+`run_request` does not run **quality-gate shell commands** in your sibling repos by default—crews produce a Markdown brief (and may apply file writes if the model chooses to). To **actually install** local pre-commit automation:
 
 ```bash
 ./scripts/bootstrap-pre-commit-hooks.sh

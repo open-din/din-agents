@@ -3,8 +3,8 @@ from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
 from din_agents.shared.cli_prefs import cli_verbose, mcp_task_scope_guard, with_cli_task_config
+from din_agents.shared.crew_tools import tools_with_change_brief, tools_without_change_brief
 from din_agents.shared.model_routing import agent_llm_kwargs
-from din_agents.tools import ChangeBriefTool, QualityGateTool, RepoContractTool
 
 
 @CrewBase
@@ -21,7 +21,7 @@ class DinStudioCrew:
     def editor_node_owner(self) -> Agent:
         return Agent(
             config=self.agents_config["editor_node_owner"],  # type: ignore[index]
-            tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
+            tools=tools_with_change_brief("din_studio"),
             verbose=cli_verbose(),
             **agent_llm_kwargs("planning"),
         )
@@ -30,7 +30,7 @@ class DinStudioCrew:
     def surface_guardian(self) -> Agent:
         return Agent(
             config=self.agents_config["surface_guardian"],  # type: ignore[index]
-            tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
+            tools=tools_with_change_brief("din_studio"),
             verbose=cli_verbose(),
             **agent_llm_kwargs("impact"),
         )
@@ -39,7 +39,7 @@ class DinStudioCrew:
     def mcp_target_maintainer(self) -> Agent:
         return Agent(
             config=self.agents_config["mcp_target_maintainer"],  # type: ignore[index]
-            tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
+            tools=tools_with_change_brief("din_studio"),
             verbose=cli_verbose(),
             **agent_llm_kwargs("binding"),
         )
@@ -48,7 +48,7 @@ class DinStudioCrew:
     def studio_ai_integrator(self) -> Agent:
         return Agent(
             config=self.agents_config["studio_ai_integrator"],  # type: ignore[index]
-            tools=[RepoContractTool(), QualityGateTool()],
+            tools=tools_without_change_brief("din_studio"),
             verbose=cli_verbose(),
             **agent_llm_kwargs("doc"),
         )
