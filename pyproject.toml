@@ -1,0 +1,31 @@
+[project]
+name = "din-agents"
+version = "0.1.0"
+description = "CrewAI control plane for din-core, react-din, and din-studio"
+authors = [{ name = "DIN Agents" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]==1.10.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4,<9"
+]
+
+[project.scripts]
+kickoff = "din_agents.main:kickoff"
+run_crew = "din_agents.main:kickoff"
+plot = "din_agents.main:plot"
+run_request = "din_agents.main:run_request_cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "flow"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

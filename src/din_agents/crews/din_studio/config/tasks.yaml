@@ -1,0 +1,50 @@
+assess_editor_ownership:
+  description: >
+    Analyze this request for din-studio: {request}
+
+    First, use the repo contract and change brief tools. Then determine whether the request belongs
+    in din-studio, which editor or app surfaces it touches, and whether it crosses into react-din or din-core ownership.
+
+    Work from these inputs:
+    - Repo path: {repo_path}
+    - Canonical docs:
+    {canonical_docs}
+    - Boundaries:
+    {boundaries}
+  expected_output: >
+    A markdown brief with ownership verdict, affected editor or app surfaces,
+    and any sibling-repo coordination notes.
+  agent: editor_node_owner
+  markdown: true
+
+review_surface_requirements:
+  description: >
+    Review the prior analysis and identify SURFACE_MANIFEST, TEST_MATRIX,
+    feature doc, or automated-test obligations caused by this request.
+  expected_output: >
+    A markdown review listing surface documentation, scenario, and test updates required
+    before a visible workflow change would be considered complete.
+  agent: surface_guardian
+  markdown: true
+
+review_mcp_impact:
+  description: >
+    Determine whether this request touches targets/mcp, bridge behavior, ws-based integrations,
+    or related release-surface tests.
+  expected_output: >
+    A markdown review listing MCP target impact, tests that must stay in sync,
+    and any protocol-facing risks.
+  agent: mcp_target_maintainer
+  markdown: true
+
+plan_studio_execution:
+  description: >
+    Produce the final din-studio execution brief for this request.
+
+    Include AI catalog sync concerns where relevant, plus the exact quality gates below:
+    {quality_gates}
+  expected_output: >
+    A final markdown plan containing recommended scope, cross-repo notes,
+    acceptance criteria, and the exact studio validation commands to run.
+  agent: studio_ai_integrator
+  markdown: true

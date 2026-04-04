@@ -1,0 +1,42 @@
+assess_patch_contract:
+  description: >
+    Analyze this request for din-core: {request}
+
+    First, use the repo contract and change brief tools. Then decide whether the request belongs
+    in din-core, which crates or contract surfaces it touches, and whether it impacts react-din.
+
+    Work from these inputs:
+    - Repo path: {repo_path}
+    - Canonical docs:
+    {canonical_docs}
+    - Boundaries:
+    {boundaries}
+  expected_output: >
+    A markdown brief with ownership verdict, affected din-core surfaces, likely crates,
+    public contract risk, and any sibling-repo coordination needed.
+  agent: patch_contract_steward
+  markdown: true
+
+review_registry_and_runtime:
+  description: >
+    Review the prior analysis and identify the exact registry, node ID, patch migration,
+    round-trip, interface naming, FFI, or WASM implications of this request.
+
+    Use the repo profile and quality gate tools again if needed.
+  expected_output: >
+    A markdown review listing registry and runtime risks, required schema or fixture touchpoints,
+    and any release-gate concerns that must be preserved.
+  agent: registry_parity_engineer
+  markdown: true
+
+plan_rust_validation:
+  description: >
+    Produce the final din-core execution brief for this request using the prior task outputs.
+
+    Include the exact quality gates below:
+    {quality_gates}
+  expected_output: >
+    A final markdown plan containing recommended scope, cross-repo notes, acceptance criteria,
+    and the exact Rust validation commands to run.
+  agent: rust_quality_runner
+  markdown: true

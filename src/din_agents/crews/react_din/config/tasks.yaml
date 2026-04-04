@@ -1,0 +1,40 @@
+assess_public_surface:
+  description: >
+    Analyze this request for react-din: {request}
+
+    First, use the repo contract and change brief tools. Then determine whether the request belongs
+    in react-din, which public library surfaces it touches, and whether it affects din-core or din-studio.
+
+    Work from these inputs:
+    - Repo path: {repo_path}
+    - Canonical docs:
+    {canonical_docs}
+    - Boundaries:
+    {boundaries}
+  expected_output: >
+    A markdown brief with ownership verdict, affected public API or schema surfaces,
+    package/export concerns, and cross-repo coordination notes.
+  agent: patch_schema_steward
+  markdown: true
+
+review_docs_and_coverage:
+  description: >
+    Review the prior analysis and identify docs/components, coverage manifest,
+    JSDoc, tests, or patch schema obligations that must move with this request.
+  expected_output: >
+    A markdown review listing required docs, tests, coverage-manifest updates,
+    and any public release surface risks.
+  agent: component_coverage_maintainer
+  markdown: true
+
+plan_library_validation:
+  description: >
+    Produce the final react-din execution brief for this request.
+
+    Include the exact quality gates below:
+    {quality_gates}
+  expected_output: >
+    A final markdown plan containing recommended scope, public contract notes,
+    acceptance criteria, and the exact TypeScript/library validation commands to run.
+  agent: library_quality_runner
+  markdown: true
