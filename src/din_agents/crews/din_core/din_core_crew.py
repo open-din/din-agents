@@ -2,6 +2,7 @@ from crewai import Agent, Crew, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
+from din_agents.shared.model_routing import agent_llm_kwargs
 from din_agents.tools import ChangeBriefTool, QualityGateTool, RepoContractTool
 
 
@@ -21,6 +22,7 @@ class DinCoreCrew:
             config=self.agents_config["patch_contract_steward"],  # type: ignore[index]
             tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
             verbose=True,
+            **agent_llm_kwargs("planning"),
         )
 
     @agent
@@ -29,6 +31,7 @@ class DinCoreCrew:
             config=self.agents_config["registry_parity_engineer"],  # type: ignore[index]
             tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
             verbose=True,
+            **agent_llm_kwargs("impact"),
         )
 
     @agent
@@ -37,6 +40,7 @@ class DinCoreCrew:
             config=self.agents_config["rust_quality_runner"],  # type: ignore[index]
             tools=[RepoContractTool(), QualityGateTool()],
             verbose=True,
+            **agent_llm_kwargs("testing"),
         )
 
     @task

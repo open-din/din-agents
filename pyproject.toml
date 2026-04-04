@@ -5,7 +5,8 @@ description = "CrewAI control plane for din-core, react-din, and din-studio"
 authors = [{ name = "DIN Agents" }]
 requires-python = ">=3.10,<3.14"
 dependencies = [
-    "crewai[tools]==1.10.1"
+    "crewai[tools]==1.10.1",
+    "litellm>=1.55,<2",
 ]
 
 [project.optional-dependencies]

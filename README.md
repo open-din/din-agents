@@ -50,6 +50,25 @@ The control plane also expects local checkout paths for:
 - `REACT_DIN_PATH`
 - `DIN_STUDIO_PATH`
 
+### Models (LiteLLM)
+
+CrewAI resolves chat completions through [LiteLLM](https://docs.litellm.ai/). This project forces the LiteLLM code path (`is_litellm=True`) so `provider/model` strings behave consistently (for example `anthropic/claude-3-5-sonnet-20241022`, `openai/gpt-4o`). Configure provider API keys as required by LiteLLM.
+
+| Role | Env var | Typical use in this repo |
+|------|---------|---------------------------|
+| Planner (Claude) | `MODEL_PLANNING` | First assessor in each crew |
+| Impact (Claude) | `MODEL_IMPACT` | Registry / coverage / surface impact |
+| Binding (Codex/OpenAI) | `MODEL_BINDING` | Patch schema steward, MCP maintainer |
+| Coder (Codex/OpenAI) | `MODEL_CODING` | Reserved for future coding agents |
+| Tester (cheap) | `MODEL_TESTING` | Quality-gate / validation brief agents |
+| Fixer (Codex/OpenAI) | `MODEL_FIXING` | Reserved for fix loops |
+| Doc (Claude) | `MODEL_DOC` | Final studio execution brief |
+| Fallback | `MODEL_DEFAULT` | Unknown task types |
+
+Optional: `MODEL_FUNCTION_CALLING` sets a smaller model for tool calls on agents that use tools.
+
+Provider keys: set `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc., per [LiteLLM providers](https://docs.litellm.ai/docs/providers).
+
 ## Run
 
 Use the default request from the environment:

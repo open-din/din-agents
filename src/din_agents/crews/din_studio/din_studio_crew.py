@@ -2,6 +2,7 @@ from crewai import Agent, Crew, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
+from din_agents.shared.model_routing import agent_llm_kwargs
 from din_agents.tools import ChangeBriefTool, QualityGateTool, RepoContractTool
 
 
@@ -21,6 +22,7 @@ class DinStudioCrew:
             config=self.agents_config["editor_node_owner"],  # type: ignore[index]
             tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
             verbose=True,
+            **agent_llm_kwargs("planning"),
         )
 
     @agent
@@ -29,6 +31,7 @@ class DinStudioCrew:
             config=self.agents_config["surface_guardian"],  # type: ignore[index]
             tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
             verbose=True,
+            **agent_llm_kwargs("impact"),
         )
 
     @agent
@@ -37,6 +40,7 @@ class DinStudioCrew:
             config=self.agents_config["mcp_target_maintainer"],  # type: ignore[index]
             tools=[RepoContractTool(), ChangeBriefTool(), QualityGateTool()],
             verbose=True,
+            **agent_llm_kwargs("binding"),
         )
 
     @agent
@@ -45,6 +49,7 @@ class DinStudioCrew:
             config=self.agents_config["studio_ai_integrator"],  # type: ignore[index]
             tools=[RepoContractTool(), QualityGateTool()],
             verbose=True,
+            **agent_llm_kwargs("doc"),
         )
 
     @task
