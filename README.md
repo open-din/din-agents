@@ -52,7 +52,7 @@ The control plane also expects local checkout paths for:
 
 ### Models (LiteLLM)
 
-CrewAI resolves chat completions through [LiteLLM](https://docs.litellm.ai/). This project forces the LiteLLM code path (`is_litellm=True`) so `provider/model` strings behave consistently (for example `anthropic/claude-3-5-sonnet-20241022`, `openai/gpt-4o`). Configure provider API keys as required by LiteLLM.
+CrewAI resolves chat completions through [LiteLLM](https://docs.litellm.ai/). This project forces the LiteLLM code path (`is_litellm=True`) so `provider/model` strings behave consistently (for example `anthropic/claude-sonnet-4-5-20250929`, `openai/gpt-4o`). Anthropic retires model snapshot IDs over time; if you see `not_found_error` for a model name, update `MODEL_*` in `.env` to a [current Claude model id](https://docs.anthropic.com/en/docs/about-claude/models). Configure provider API keys as required by LiteLLM.
 
 | Role | Env var | Typical use in this repo |
 |------|---------|---------------------------|
@@ -139,6 +139,8 @@ uv run pytest
 ```
 
 ## Project Layout
+
+Example user requests (copy/paste for `run_request`): see [`din-agent/`](din-agent/README.md).
 
 ```text
 src/din_agents/

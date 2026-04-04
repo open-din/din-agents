@@ -1,8 +1,9 @@
 """LiteLLM-compatible model routing via environment variables.
 
 CrewAI resolves completions through LiteLLM when installed. Model strings must
-follow LiteLLM's ``provider/model`` convention (e.g. ``anthropic/claude-3-5-sonnet-20241022``,
-``openai/gpt-4o``). See https://docs.litellm.ai/docs/providers
+follow LiteLLM's ``provider/model`` convention (e.g. ``anthropic/claude-sonnet-4-5-20250929``,
+``openai/gpt-4o``). Older Anthropic snapshot IDs may return ``not_found``; override via env.
+See https://docs.litellm.ai/docs/providers
 
 Role mapping (requested):
   - Planner  → Claude   (MODEL_PLANNING)
@@ -23,13 +24,13 @@ from crewai import LLM
 
 # Defaults are LiteLLM route strings; override via env for your keys and providers.
 _DEFAULTS: dict[str, str] = {
-    "planning": "anthropic/claude-3-5-sonnet-20241022",
-    "impact": "anthropic/claude-3-5-sonnet-20241022",
+    "planning": "anthropic/claude-sonnet-4-5-20250929",
+    "impact": "anthropic/claude-sonnet-4-5-20250929",
     "binding": "openai/gpt-4o",
     "coding": "openai/gpt-4o",
     "testing": "openai/gpt-4o-mini",
     "fixing": "openai/gpt-4o",
-    "doc": "anthropic/claude-3-5-sonnet-20241022",
+    "doc": "anthropic/claude-sonnet-4-5-20250929",
     "default": "openai/gpt-4o-mini",
 }
 
