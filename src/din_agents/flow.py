@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import time
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -12,6 +14,11 @@ from din_agents.crews.din_studio import DinStudioCrew
 from din_agents.crews.react_din import ReactDinCrew
 from din_agents.shared.repo_profiles import get_repo_profile
 from din_agents.shared.rules import RoutingDecision, render_routing_decision, route_request, select_quality_gates
+
+logger = logging.getLogger(__name__)
+
+_MAX_RETRIES = 4
+_INITIAL_BACKOFF_S = 30
 
 
 def _crew_tasks_markdown(result: CrewOutput) -> str:
@@ -109,7 +116,25 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
             "din_studio": DinStudioCrew,
         }
         crew_cls = crew_map[repo_id]
-        result = crew_cls().crew().kickoff(inputs=self._crew_inputs(repo_id))
+        inputs = self._crew_inputs(repo_id)
+
+        last_exc: Exception | None = None
+        for attempt in range(_MAX_RETRIES + 1):
+            try:
+                result = crew_cls().crew().kickoff(inputs=inputs)
+                break
+            except Exception as exc:
+                if "rate_limit" not in type(exc).__name__.lower() and "rate_limit" not in str(exc).lower():
+                    raise
+                last_exc = exc
+                if attempt >= _MAX_RETRIES:
+                    raise
+                wait = _INITIAL_BACKOFF_S * (2 ** attempt)
+                logger.warning("Rate-limited on %s (attempt %d/%d), retrying in %ds…", repo_id, attempt + 1, _MAX_RETRIES + 1, wait)
+                time.sleep(wait)
+        else:
+            raise last_exc  # type: ignore[misc]
+
         if not isinstance(result, CrewOutput):
             self.state.repo_outputs[repo_id] = str(result)
         else:

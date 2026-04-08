@@ -70,7 +70,7 @@ def plot() -> None:
     flow.plot("din_control_plane")
 
 
-def run_request_cli() -> str:
+def run_request_cli() -> None:
     parser = argparse.ArgumentParser(description="Run the DIN CrewAI control plane.")
     parser.add_argument("request", nargs="?", help="Request to route through the control plane.")
     parser.add_argument(
@@ -108,7 +108,7 @@ def run_request_cli() -> str:
     if args.no_print:
         os.environ["DIN_AGENTS_NO_PRINT"] = "1"
     try:
-        return run_request(
+        run_request(
             request=request,
             repo_hint=args.repo_hint,
             report_path=report_path,

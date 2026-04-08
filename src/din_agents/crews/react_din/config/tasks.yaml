@@ -2,8 +2,11 @@ assess_public_surface:
   description: >
     Analyze this request for react-din: {request}
 
-    First, use the repo contract and change brief tools. Then determine whether the request belongs
-    in react-din, which public library surfaces it touches, and whether it affects din-core or din-studio.
+    First, use the repo contract and change brief tools. Then use the file reader to inspect
+    the actual repository: list the top-level directory, read relevant source files, existing
+    docs, package.json, and any files the request would touch. Determine whether the request
+    belongs in react-din, which public library surfaces it touches, and whether it affects
+    din-core or din-studio.
 
     Work from these inputs:
     - Repo path: {repo_path}
@@ -13,7 +16,8 @@ assess_public_surface:
     {boundaries}
   expected_output: >
     A markdown brief with ownership verdict, affected public API or schema surfaces,
-    package/export concerns, and cross-repo coordination notes.
+    package/export concerns, cross-repo coordination notes, and a summary of existing
+    repo state based on what you read from the actual files.
   agent: patch_schema_steward
   markdown: true
 
@@ -21,9 +25,12 @@ review_docs_and_coverage:
   description: >
     Review the prior analysis and identify docs/components, coverage manifest,
     JSDoc, tests, or patch schema obligations that must move with this request.
+
+    Use the file reader to inspect actual source files, docs, and test files in the repository
+    relevant to the request.
   expected_output: >
     A markdown review listing required docs, tests, coverage-manifest updates,
-    and any public release surface risks.
+    and any public release surface risks — grounded in actual file contents you read from the repo.
   agent: component_coverage_maintainer
   markdown: true
 
@@ -31,10 +38,14 @@ plan_library_validation:
   description: >
     Produce the final react-din execution brief for this request.
 
+    Use the file reader to verify the current state of any files that need changing. If the
+    request asks for concrete edits, use the file writer to make those changes in the
+    repository now. Read before writing.
+
     Include the exact quality gates below:
     {quality_gates}
   expected_output: >
-    A final markdown plan containing recommended scope, public contract notes,
+    A final markdown plan containing the changes made (or recommended), public contract notes,
     acceptance criteria, and the exact TypeScript/library validation commands to run.
   agent: library_quality_runner
   markdown: true

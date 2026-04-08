@@ -2,8 +2,11 @@ assess_editor_ownership:
   description: >
     Analyze this request for din-studio: {request}
 
-    First, use the repo contract and change brief tools. Then determine whether the request belongs
-    in din-studio, which editor or app surfaces it touches, and whether it crosses into react-din or din-core ownership.
+    First, use the repo contract and change brief tools. Then use the file reader to inspect
+    the actual repository: list the top-level directory, read relevant source files, existing
+    docs, package.json, and any files the request would touch. Determine whether the request
+    belongs in din-studio, which editor or app surfaces it touches, and whether it crosses
+    into react-din or din-core ownership.
 
     Work from these inputs:
     - Repo path: {repo_path}
@@ -13,7 +16,8 @@ assess_editor_ownership:
     {boundaries}
   expected_output: >
     A markdown brief with ownership verdict, affected editor or app surfaces,
-    and any sibling-repo coordination notes.
+    sibling-repo coordination notes, and a summary of existing repo state based on
+    what you read from the actual files.
   agent: editor_node_owner
   markdown: true
 
@@ -21,9 +25,13 @@ review_surface_requirements:
   description: >
     Review the prior analysis and identify SURFACE_MANIFEST, TEST_MATRIX,
     feature doc, or automated-test obligations caused by this request.
+
+    Use the file reader to inspect actual manifest and doc files in the repository
+    relevant to the request.
   expected_output: >
     A markdown review listing surface documentation, scenario, and test updates required
-    before a visible workflow change would be considered complete.
+    before a visible workflow change would be considered complete — grounded in actual file
+    contents you read from the repo.
   agent: surface_guardian
   markdown: true
 
@@ -31,6 +39,8 @@ review_mcp_impact:
   description: >
     Determine whether this request touches targets/mcp, bridge behavior, ws-based integrations,
     or related release-surface tests.
+
+    Use the file reader to inspect targets/mcp and related test files if relevant.
   expected_output: >
     A markdown review listing MCP target impact, tests that must stay in sync,
     and any protocol-facing risks.
@@ -41,10 +51,14 @@ plan_studio_execution:
   description: >
     Produce the final din-studio execution brief for this request.
 
+    Use the file reader to verify the current state of any files that need changing. If the
+    request asks for concrete edits, use the file writer to make those changes in the
+    repository now. Read before writing.
+
     Include AI catalog sync concerns where relevant, plus the exact quality gates below:
     {quality_gates}
   expected_output: >
-    A final markdown plan containing recommended scope, cross-repo notes,
+    A final markdown plan containing the changes made (or recommended), cross-repo notes,
     acceptance criteria, and the exact studio validation commands to run.
   agent: studio_ai_integrator
   markdown: true
