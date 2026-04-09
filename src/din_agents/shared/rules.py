@@ -1,3 +1,5 @@
+"""Heuristic router and quality command selector for multi-repo DIN requests."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -70,6 +72,7 @@ CROSS_REPO_KEYWORDS = (
 
 
 class RoutingDecision(BaseModel):
+    """Structured routing outcome listing target repos and rationale."""
     route: str
     affected_repos: list[str] = Field(default_factory=list)
     cross_repo: bool = False
@@ -92,6 +95,7 @@ def _extract_repo_mentions(text: str) -> list[str]:
 
 
 def route_request(request: str, repo_hint: str | None = None) -> RoutingDecision:
+    """Score repo keywords, hints, and cross-repo phrases to choose affected repos."""
     lowered = request.lower()
     scores: dict[str, int] = defaultdict(int)
     reasons: list[str] = []
@@ -160,6 +164,7 @@ def route_request(request: str, repo_hint: str | None = None) -> RoutingDecision
 
 
 def select_quality_gates(affected_repos: list[str]) -> dict[str, list[str]]:
+    """Map repo ids to ordered shell commands from each :class:`RepoProfile`."""
     selection: dict[str, list[str]] = {}
     for repo_id in affected_repos:
         profile = get_repo_profile(repo_id)
@@ -168,6 +173,7 @@ def select_quality_gates(affected_repos: list[str]) -> dict[str, list[str]]:
 
 
 def render_routing_decision(decision: RoutingDecision) -> str:
+    """Short markdown block summarizing a routing decision for prompts."""
     affected = ", ".join(get_repo_profile(repo_id).display_name for repo_id in decision.affected_repos)
     reasons = "\n".join(f"- {reason}" for reason in decision.reasons)
     return f"""Route: {decision.route}

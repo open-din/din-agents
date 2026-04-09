@@ -5,3 +5,4 @@ __pycache__/
 output/
 din_agents_control_plane/
 .DS_Store
+docs/generated/

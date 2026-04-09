@@ -26,6 +26,9 @@ review_surface_requirements:
     Review the prior analysis and identify SURFACE_MANIFEST, TEST_MATRIX,
     feature doc, or automated-test obligations caused by this request.
 
+    When editor-core modules in `typedoc.json` change, mention running `npm run docs:generate`
+    (mirrors the `docs_generate` quality gate) for on-demand API reference.
+
     Use the file reader to inspect actual manifest and doc files in the repository
     relevant to the request.
   expected_output: >

@@ -14,6 +14,7 @@ class QualityGateToolInput(BaseModel):
 
 
 class QualityGateTool(BaseTool):
+    """Looks up shell quality gate commands from repo profiles."""
     name: str = "quality_gate_lookup"
     description: str = (
         "Return the quality gate commands for a DIN repository. "

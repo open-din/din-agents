@@ -25,6 +25,9 @@ review_registry_and_runtime:
     Review the prior analysis and identify the exact registry, node ID, patch migration,
     round-trip, interface naming, FFI, or WASM implications of this request.
 
+    When `pub` rustdoc surfaces move, call out `./scripts/generate-docs.sh` alongside other
+    quality gates so HTML docs and the short `docs/generated` index stay honest.
+
     Use the file reader to inspect actual source files in the repository: read crate lib.rs files,
     schema and fixture files, existing examples, and test files relevant to the request.
     Use the repo profile and quality gate tools again if needed.

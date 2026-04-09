@@ -18,6 +18,7 @@ class ChangeBriefToolInput(BaseModel):
 
 
 class ChangeBriefTool(BaseTool):
+    """Builds a routing and escalation brief from a raw user request."""
     name: str = "change_brief_builder"
     description: str = (
         "Summarize routing and cross-repo impact for a DIN change request. "

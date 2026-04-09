@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""CLI entrypoints for kicking off the CrewAI control plane."""
+
 from __future__ import annotations
 
 import argparse
@@ -29,6 +31,7 @@ def run_request(
     quiet: bool = False,
     print_report: bool = True,
 ) -> str:
+    """Execute the control-plane flow and persist/print the markdown report."""
     prev_quiet = os.environ.get("DIN_AGENTS_QUIET")
     if quiet:
         os.environ["DIN_AGENTS_QUIET"] = "1"
@@ -55,6 +58,7 @@ def run_request(
 
 
 def kickoff() -> str:
+    """Load request text from the environment and delegate to :func:`run_request`."""
     request = os.environ.get(
         "DIN_AGENTS_REQUEST",
         "Assess a DIN change request across din-core, react-din, and din-studio.",
@@ -66,11 +70,13 @@ def kickoff() -> str:
 
 
 def plot() -> None:
+    """Emit a diagram of the control-plane Flow for debugging."""
     flow = DinControlPlaneFlow()
     flow.plot("din_control_plane")
 
 
 def run_request_cli() -> None:
+    """`run_request` Click-less argparse wrapper used by the `run_request` script entry."""
     parser = argparse.ArgumentParser(description="Run the DIN CrewAI control plane.")
     parser.add_argument("request", nargs="?", help="Request to route through the control plane.")
     parser.add_argument(

@@ -1,3 +1,5 @@
+"""Static repo profiles (paths, quality gates, prompts) for din-core, react-din, and din-studio."""
+
 from __future__ import annotations
 
 from functools import lru_cache
@@ -7,12 +9,14 @@ from pydantic import BaseModel, Field
 
 
 class QualityGate(BaseModel):
+    """One shell command run as a pre-merge check for a repo."""
     name: str
     command: str
     notes: str = ""
 
 
 class RepoProfile(BaseModel):
+    """Routing and tooling metadata for a sibling DIN repository checkout."""
     repo_id: str
     display_name: str
     path: str
@@ -33,6 +37,7 @@ def _repo_path(env_name: str, fallback: str) -> str:
 
 @lru_cache(maxsize=1)
 def get_repo_profiles() -> dict[str, RepoProfile]:
+    """Return frozen profiles used by routing, crews, and contract tools."""
     return {
         "din_core": RepoProfile(
             repo_id="din_core",
@@ -67,6 +72,11 @@ def get_repo_profiles() -> dict[str, RepoProfile]:
                     command="cargo clippy --workspace --all-targets -- -D warnings",
                 ),
                 QualityGate(name="test", command="cargo test --workspace"),
+                QualityGate(
+                    name="docs_generate",
+                    command="./scripts/generate-docs.sh",
+                    notes="(from repo root) refreshes `target/doc/` HTML and `docs/generated/README.md`",
+                ),
             ],
             routing_keywords=[
                 "rust",
@@ -119,6 +129,11 @@ def get_repo_profiles() -> dict[str, RepoProfile]:
                 QualityGate(name="typecheck", command="npm run typecheck"),
                 QualityGate(name="ci_check", command="npm run ci:check"),
                 QualityGate(name="validate_changes", command="npm run validate:changes"),
+                QualityGate(
+                    name="docs_generate",
+                    command="npm run docs:generate",
+                    notes="TypeDoc markdown under `docs/generated/` (gitignored)",
+                ),
             ],
             routing_keywords=[
                 "react",
@@ -173,6 +188,11 @@ def get_repo_profiles() -> dict[str, RepoProfile]:
                 QualityGate(name="validate_docs", command="npm run validate:docs"),
                 QualityGate(name="test", command="npm run test"),
                 QualityGate(name="test_e2e", command="npm run test:e2e"),
+                QualityGate(
+                    name="docs_generate",
+                    command="npm run docs:generate",
+                    notes="TypeDoc markdown under `docs/generated/` (gitignored)",
+                ),
             ],
             routing_keywords=[
                 "electron",
@@ -199,6 +219,7 @@ def get_repo_profiles() -> dict[str, RepoProfile]:
 
 
 def get_repo_profile(repo_id: str) -> RepoProfile:
+    """Lookup a profile by stable repo id (`din_core`, `react_din`, `din_studio`)."""
     profiles = get_repo_profiles()
     if repo_id not in profiles:
         raise KeyError(f"Unknown repo id: {repo_id}")
@@ -206,6 +227,7 @@ def get_repo_profile(repo_id: str) -> RepoProfile:
 
 
 def render_repo_profile(repo_id: str) -> str:
+    """Human-readable markdown summary of a repo profile for prompts."""
     profile = get_repo_profile(repo_id)
     owned_surfaces = "\n".join(f"- {surface}" for surface in profile.owned_surfaces)
     docs = "\n".join(f"- {path}" for path in profile.canonical_docs)
@@ -242,6 +264,7 @@ Prompt notes:
 
 
 def render_quality_gates(repo_id: str) -> str:
+    """Compact list of quality gate commands suitable for tool or planner context."""
     profile = get_repo_profile(repo_id)
     return "\n".join(
         f"- {gate.name}: `{gate.command}`" for gate in profile.quality_gates

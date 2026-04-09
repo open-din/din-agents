@@ -11,7 +11,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.4,<9"
+    "pytest>=8.4,<9",
+    "pdoc>=15,<16",
+    "ruff>=0.9,<0.12",
 ]
 
 [project.scripts]
@@ -30,3 +32,16 @@ type = "flow"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.ruff]
+exclude = [".git", ".venv"]
+
+[tool.ruff.lint]
+extend-select = ["D"]
+ignore = ["D100", "D104", "D105", "D107", "D102"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["D"]

@@ -1,3 +1,5 @@
+"""CrewAI Flow wiring that routes user requests across per-repo crews."""
+
 from __future__ import annotations
 
 import logging
@@ -36,6 +38,7 @@ def _crew_tasks_markdown(result: CrewOutput) -> str:
 
 
 class ControlPlaneState(BaseModel):
+    """Mutable flow state shared between routing, crews, and report assembly."""
     request: str = ""
     repo_hint: str = ""
     route: str = ""
@@ -49,7 +52,7 @@ class ControlPlaneState(BaseModel):
 
 
 class DinControlPlaneFlow(Flow[ControlPlaneState]):
-    """Routes requests across DIN repos and composes a final execution brief."""
+    """Top-level CrewAI Flow that routes work across DIN repos and composes the final brief."""
 
     @start()
     def collect_request(self):

@@ -14,6 +14,7 @@ class RepoContractToolInput(BaseModel):
 
 
 class RepoContractTool(BaseTool):
+    """Returns markdown repo profile data (docs paths, boundaries, gates)."""
     name: str = "repo_contract_lookup"
     description: str = (
         "Return the canonical repo profile, ownership boundaries, docs, and quality gates "
