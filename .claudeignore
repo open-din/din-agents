@@ -1,0 +1,24 @@
+# Virtual envs & packages
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+
+# Generated / local output
+output/
+din_agents_control_plane/
+
+# Env (secrets)
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+.idea/
