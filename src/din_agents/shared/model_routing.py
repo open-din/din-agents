@@ -48,6 +48,19 @@ _ENV_KEYS: dict[str, str] = {
 }
 
 
+def _anthropic_native_tools_enabled() -> bool:
+    """Anthropic native tool calling is opt-in until CrewAI/LiteLLM final-answer calls are stable."""
+    raw = os.environ.get("DIN_AGENTS_ENABLE_ANTHROPIC_NATIVE_TOOLS", "").strip().lower()
+    return raw in ("1", "true", "yes")
+
+
+def _configure_llm(llm: LLM) -> LLM:
+    """Apply repo-specific safety toggles to a freshly created CrewAI LLM."""
+    if getattr(llm, "is_anthropic", False) and not _anthropic_native_tools_enabled():
+        llm.supports_function_calling = lambda: False  # type: ignore[method-assign]
+    return llm
+
+
 def get_model(task_type: str) -> str:
     """Return the LiteLLM model route for a logical task type."""
     key = task_type.lower().strip()
@@ -70,7 +83,7 @@ def get_model(task_type: str) -> str:
 
 def get_llm(task_type: str) -> LLM:
     """Build a CrewAI LLM that always routes through LiteLLM (not native SDK shortcuts)."""
-    return LLM(model=get_model(task_type), is_litellm=True)
+    return _configure_llm(LLM(model=get_model(task_type), is_litellm=True))
 
 
 def get_function_calling_llm() -> LLM | None:
@@ -78,7 +91,7 @@ def get_function_calling_llm() -> LLM | None:
     raw = os.environ.get("MODEL_FUNCTION_CALLING", "").strip()
     if not raw:
         return None
-    return LLM(model=raw, is_litellm=True)
+    return _configure_llm(LLM(model=raw, is_litellm=True))
 
 
 def agent_llm_kwargs(task_type: str) -> dict[str, Any]:

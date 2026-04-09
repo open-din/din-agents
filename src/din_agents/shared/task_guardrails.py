@@ -149,3 +149,40 @@ def din_core_require_tools_and_markdown(
             "deliver the complete markdown brief as your Final Answer right now.",
         )
     return (True, text)
+
+
+def require_markdown_execution_brief(
+    output: Union[TaskOutput, LiteAgentOutput],
+) -> Tuple[bool, Any]:
+    """Require a non-trivial markdown execution brief for final planning tasks."""
+    text = _output_text(output)
+    echo = _guardrail_echo.get()
+    if echo and not _has_path_route_fingerprints(text):
+        path_line, route_line = echo
+        text = f"{path_line}\n{route_line}\n\n{text}"
+
+    if len(text) < 240:
+        return (
+            False,
+            "Guardrail FAILED: final execution brief is too short. "
+            "Return complete markdown with `##` headings, Path:, Route:, acceptance criteria, "
+            "and the exact quality gates listed in the task inputs.",
+        )
+    if "##" not in text:
+        return (
+            False,
+            "Guardrail FAILED: final execution brief must include markdown `##` section headings.",
+        )
+    if not _has_path_route_fingerprints(text):
+        return (
+            False,
+            "Guardrail FAILED: include literal `Path:` and `Route:` lines copied from the task inputs.",
+        )
+    first_line = text.splitlines()[0] if text else ""
+    if _PREAMBLE_START.match(first_line):
+        return (
+            False,
+            "Guardrail FAILED: do not start with 'I will' / 'Let me' — "
+            "deliver the full execution brief immediately.",
+        )
+    return (True, text)

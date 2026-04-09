@@ -4,8 +4,9 @@ from crewai.project import CrewBase, agent, crew, task
 
 from din_agents.shared.cli_prefs import cli_verbose, mcp_task_scope_guard, with_cli_task_config
 from din_agents.shared.crew_context import TruncatingCrew
-from din_agents.shared.crew_tools import tools_with_change_brief, tools_without_change_brief
+from din_agents.shared.crew_tools import analysis_tools, execution_tools
 from din_agents.shared.model_routing import agent_llm_kwargs
+from din_agents.shared.task_guardrails import require_markdown_execution_brief
 
 
 @CrewBase
@@ -22,7 +23,8 @@ class DinStudioCrew:
     def editor_node_owner(self) -> Agent:
         return Agent(
             config=self.agents_config["editor_node_owner"],  # type: ignore[index]
-            tools=tools_with_change_brief("din_studio"),
+            tools=analysis_tools("din_studio"),
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("planning"),
         )
@@ -31,7 +33,8 @@ class DinStudioCrew:
     def surface_guardian(self) -> Agent:
         return Agent(
             config=self.agents_config["surface_guardian"],  # type: ignore[index]
-            tools=tools_with_change_brief("din_studio"),
+            tools=analysis_tools("din_studio"),
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("impact"),
         )
@@ -40,7 +43,8 @@ class DinStudioCrew:
     def mcp_target_maintainer(self) -> Agent:
         return Agent(
             config=self.agents_config["mcp_target_maintainer"],  # type: ignore[index]
-            tools=tools_with_change_brief("din_studio"),
+            tools=analysis_tools("din_studio"),
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("binding"),
         )
@@ -49,7 +53,18 @@ class DinStudioCrew:
     def studio_ai_integrator(self) -> Agent:
         return Agent(
             config=self.agents_config["studio_ai_integrator"],  # type: ignore[index]
-            tools=tools_without_change_brief("din_studio"),
+            tools=execution_tools("din_studio"),
+            max_iter=10,
+            verbose=cli_verbose(),
+            **agent_llm_kwargs("doc"),
+        )
+
+    @agent
+    def studio_brief_runner(self) -> Agent:
+        return Agent(
+            config=self.agents_config["studio_ai_integrator"],  # type: ignore[index]
+            tools=[],
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("doc"),
         )
@@ -64,6 +79,7 @@ class DinStudioCrew:
     def review_surface_requirements(self) -> Task:
         return Task(
             config=with_cli_task_config(self.tasks_config["review_surface_requirements"]),  # type: ignore[index]
+            context=[],
         )
 
     @task
@@ -73,12 +89,17 @@ class DinStudioCrew:
                 self.tasks_config["review_mcp_impact"],  # type: ignore[index]
                 extra_description_suffix=mcp_task_scope_guard(),
             ),
+            context=[],
         )
 
     @task
     def plan_studio_execution(self) -> Task:
         return Task(
             config=with_cli_task_config(self.tasks_config["plan_studio_execution"]),  # type: ignore[index]
+            agent=self.studio_brief_runner(),
+            context=[],
+            guardrail=require_markdown_execution_brief,
+            guardrail_max_retries=4,
         )
 
     @crew

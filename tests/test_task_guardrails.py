@@ -3,6 +3,7 @@ from crewai.tasks.task_output import TaskOutput
 from din_agents.shared.task_guardrails import (
     clear_din_core_guardrail_echo,
     din_core_require_tools_and_markdown,
+    require_markdown_execution_brief,
     set_din_core_guardrail_echo,
 )
 
@@ -90,3 +91,29 @@ Extra detail so this is long enough for the minimum length check and stays subst
     ok, data = din_core_require_tools_and_markdown(_out(body))
     assert ok is True
     assert "##" in str(data)
+
+
+def test_execution_brief_guard_rejects_short_non_markdown_output() -> None:
+    ok, err = require_markdown_execution_brief(
+        _out("- Ensure all commands are executed in the specified order.")
+    )
+    assert ok is False
+    assert err is not None
+    assert "execution brief" in str(err).lower()
+
+
+def test_execution_brief_guard_prepends_path_and_route_echo() -> None:
+    set_din_core_guardrail_echo(repo_path="/tmp/din-core", route="din_core")
+    try:
+        body = """## Validation
+- Copy the exact quality gates.
+
+## Acceptance
+- Keep the brief concrete and repo-scoped.
+""" + ("Detail line.\n" * 20)
+        ok, data = require_markdown_execution_brief(_out(body))
+        assert ok is True
+        assert "Path: /tmp/din-core" in str(data)
+        assert "Route: din_core" in str(data)
+    finally:
+        clear_din_core_guardrail_echo()

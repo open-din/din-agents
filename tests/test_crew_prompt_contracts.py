@@ -17,6 +17,7 @@ def test_din_core_prompt_contract_contains_expected_agents_and_tasks():
     assert "rust_quality_runner:" in agents
     assert "assess_patch_contract:" in tasks
     assert "plan_rust_validation:" in tasks
+    assert "Do not look up quality gates with tools." in tasks
 
 
 def test_react_din_prompt_contract_contains_expected_agents_and_tasks():
@@ -28,6 +29,7 @@ def test_react_din_prompt_contract_contains_expected_agents_and_tasks():
     assert "library_quality_runner:" in agents
     assert "assess_public_surface:" in tasks
     assert "plan_library_validation:" in tasks
+    assert "Do not look up quality gates with tools." in tasks
 
 
 def test_din_studio_prompt_contract_contains_expected_agents_and_tasks():
@@ -40,3 +42,4 @@ def test_din_studio_prompt_contract_contains_expected_agents_and_tasks():
     assert "studio_ai_integrator:" in agents
     assert "review_mcp_impact:" in tasks
     assert "plan_studio_execution:" in tasks
+    assert "Do not look up quality gates with tools." in tasks

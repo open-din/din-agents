@@ -4,32 +4,33 @@ assess_patch_contract:
 
     Request: {request}
 
-    ## Pre-computed repo contract (from repo_contract_lookup)
+    Start from the already-routed control-plane inputs below. Keep your answer compact and
+    decision-oriented; do not restate the whole request verbatim.
 
-    {repo_contract_output}
-
-    ## Pre-computed routing brief (from change_brief_builder)
-
-    {change_brief_output}
-
-    Use the file reader to inspect the repo at {repo_path}: list the top-level directory,
-    read relevant source files, Cargo.toml, existing docs, and any files the request touches.
-    Decide whether this belongs in din-core, which crates or contract surfaces it touches,
-    and whether it impacts react-din.
-
-    Additional inputs:
-    - Summary: {summary_path}
-    - API summary: {api_summary_path}
-    - Repo manifest: {repo_manifest_path}
+    Path: {repo_path}
+    Route: {routing_route}
+    Summary doc: {summary_path}
+    API summary: {api_summary_path}
+    Repo manifest: {repo_manifest_path}
+    Routing reasons:
+    {routing_reasons}
     - Entry points:
     {entry_points}
     - Hard boundaries:
     {hard_boundaries}
 
+    Documentation-first workflow:
+    - Treat the summary, API summary, repo manifest, and route card as the primary context.
+    - Use the file reader only for exact follow-up files after that, preferring 1-3 targeted reads and never more than 4 reads total.
+    - Do not list the whole repo or read large sources unless the request truly depends on them.
+    - Avoid full schema or fixture reads unless a single exact field or enum is necessary to answer.
+
+    Decide whether this belongs in din-core, which crates or contract surfaces it touches,
+    and whether it impacts react-din.
+
     Your Final Answer MUST:
     - Be complete markdown with multiple `##` headings and concrete bullets.
-    - Include a literal `Path:` line (copy from the repo contract above).
-    - Include a literal `Route:` line (copy from the routing brief above).
+    - Include a literal `Path:` line and a literal `Route:` line copied exactly from the inputs above.
     - NOT be a short preamble like "I will..." — deliver the full brief now.
   expected_output: >
     A markdown brief (with `##` headings) containing ownership verdict, affected din-core
@@ -43,16 +44,16 @@ review_registry_and_runtime:
   description: >
     Review the prior analysis and produce a **complete markdown review**.
 
-    ## Pre-computed repo contract (from repo_contract_lookup)
+    Path: {repo_path}
+    Route: {routing_route}
+    API summary: {api_summary_path}
+    Repo manifest: {repo_manifest_path}
+    Routing reasons:
+    {routing_reasons}
 
-    {repo_contract_output}
-
-    ## Pre-computed routing brief (from change_brief_builder)
-
-    {change_brief_output}
-
-    Use the file reader to inspect actual source files — crate lib.rs files,
-    schema and fixture files, existing examples, and tests relevant to the request.
+    Use the file reader only for exact source files, fixtures, examples, or tests needed to
+    resolve runtime and registry impact. Prefer focused reads over broad scans, and never more
+    than 4 reads total for this task.
     Identify the exact registry, node ID, patch migration, round-trip, interface naming,
     FFI, or WASM implications of this request.
 
@@ -66,8 +67,7 @@ review_registry_and_runtime:
 
     Your Final Answer MUST:
     - Be complete markdown with multiple `##` headings and concrete bullets.
-    - Include a literal `Path:` line (copy from the repo contract above).
-    - Include a literal `Route:` line (copy from the routing brief above).
+    - Include a literal `Path:` line and a literal `Route:` line copied exactly from the inputs above.
     - NOT be a short preamble — deliver the full review now.
   expected_output: >
     A markdown review (with `##` headings) listing registry and runtime risks, required schema
@@ -78,11 +78,19 @@ review_registry_and_runtime:
 
 plan_rust_validation:
   description: >
-    Produce the final din-core execution brief for this request using the prior task outputs.
+    Produce the final din-core execution brief for this request.
 
-    Use the file reader to verify the current state of any files that need changing. If the
-    request asks for concrete edits (documentation, examples, code), use the file writer to
-    make those changes in the repository now. Read before writing.
+    Path: {repo_path}
+    Route: {routing_route}
+
+    Use the file reader to verify only the exact files that need changing. Do not repeat broad
+    repo discovery in this task. If the request asks for concrete edits (documentation,
+    examples, code), use the file writer to make those changes in the repository now. Read
+    before writing. If no edit is required, answer directly with the execution brief instead
+    of calling tools again.
+
+    Do not look up quality gates with tools. They are already injected below and must be copied
+    exactly into the final markdown.
 
     Include the exact quality gates below:
     {quality_gates}

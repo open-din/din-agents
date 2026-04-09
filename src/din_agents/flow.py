@@ -15,7 +15,7 @@ from crewai.flow.flow import Flow, listen, or_, router, start
 from din_agents.crews.din_core import DinCoreCrew
 from din_agents.crews.din_studio import DinStudioCrew
 from din_agents.crews.react_din import ReactDinCrew
-from din_agents.shared.repo_profiles import get_repo_profile, render_repo_profile
+from din_agents.shared.repo_profiles import get_repo_profile
 from din_agents.shared.rules import RoutingDecision, render_routing_decision, route_request, select_quality_gates
 from din_agents.shared.runtime_prefs import compact_prompts_enabled, pre_crew_sleep_seconds
 from din_agents.shared.task_guardrails import clear_din_core_guardrail_echo, set_din_core_guardrail_echo
@@ -68,6 +68,11 @@ def _crew_tasks_markdown(result: CrewOutput) -> str:
         if chunks:
             return "\n\n---\n\n".join(chunks)
     return (result.raw or "").strip()
+
+
+def _estimate_prompt_budget_chars(inputs: dict[str, str]) -> int:
+    """Coarse custom prompt budget before CrewAI adds its own wrappers."""
+    return sum(len(value) for value in inputs.values())
 
 
 class ControlPlaneState(BaseModel):
@@ -184,6 +189,11 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
         }
         crew_cls = crew_map[repo_id]
         inputs = self._crew_inputs(repo_id)
+        logger.info(
+            "Prompt budget before kickoff for %s: %d custom chars",
+            repo_id,
+            _estimate_prompt_budget_chars(inputs),
+        )
         set_din_core_guardrail_echo(
             repo_path=inputs["repo_path"],
             route=inputs["routing_route"],
@@ -298,18 +308,17 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
         else:
             entry_points = "\n".join(f"- {path}" for path in profile.entry_points)
             hard_boundaries = "\n".join(f"- {item}" for item in profile.hard_boundaries)
-        repo_contract_text = render_repo_profile(repo_id)
         decision = route_request(
             request=self.state.request,
             repo_hint=repo_id,
         )
-        change_brief_text = render_routing_decision(decision)
 
         return {
             "request": self.state.request,
             "repo_hint": self.state.repo_hint,
             "repo_path": profile.path,
             "routing_route": decision.route,
+            "routing_reasons": "\n".join(f"- {reason}" for reason in decision.reasons),
             "summary_path": profile.summary_path,
             "api_summary_path": profile.api_summary_path,
             "repo_manifest_path": profile.repo_manifest_path,
@@ -318,8 +327,6 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
             "quality_gates": "\n".join(
                 f"- `{command}`" for command in self.state.quality_commands.get(repo_id, [])
             ),
-            "repo_contract_output": repo_contract_text,
-            "change_brief_output": change_brief_text,
         }
 
     def _render_final_report(self) -> str:

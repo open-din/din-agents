@@ -1,30 +1,25 @@
-"""Shared CrewAI tool lists (contract lookup + optional brief + quality gates + repo-scoped reader/writer)."""
+"""Shared CrewAI tool lists tuned for prompt size and repo-scoped execution."""
 
 from __future__ import annotations
 
-from din_agents.tools.change_brief_tool import ChangeBriefTool
-from din_agents.tools.quality_gate_tool import QualityGateTool
-from din_agents.tools.repo_contract_tool import RepoContractTool
 from din_agents.tools.repo_file_read_tool import make_repo_file_read_tool
 from din_agents.tools.repo_file_write_tool import make_repo_file_write_tool
 
 
-def tools_with_change_brief(repo_id: str) -> list:
-    """Contract, routing brief, quality gates, file reads, and file writes for ``repo_id``."""
+def analysis_tools(repo_id: str) -> list:
+    """Minimal analysis toolkit: targeted repo reads only."""
     return [
-        RepoContractTool(),
-        ChangeBriefTool(),
-        QualityGateTool(),
         make_repo_file_read_tool(repo_id),
-        make_repo_file_write_tool(repo_id),
     ]
 
 
-def tools_without_change_brief(repo_id: str) -> list:
-    """Contract, quality gates, file reads, and file writes (no change-brief builder)."""
+def execution_tools(repo_id: str) -> list:
+    """Execution toolkit: targeted reads and optional writes.
+
+    Quality gates are injected into task inputs directly; keeping them out of the
+    native tool list avoids low-value lookup loops on Anthropic-backed runs.
+    """
     return [
-        RepoContractTool(),
-        QualityGateTool(),
         make_repo_file_read_tool(repo_id),
         make_repo_file_write_tool(repo_id),
     ]

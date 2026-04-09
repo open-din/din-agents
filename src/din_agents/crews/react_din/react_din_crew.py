@@ -4,8 +4,9 @@ from crewai.project import CrewBase, agent, crew, task
 
 from din_agents.shared.cli_prefs import cli_verbose, with_cli_task_config
 from din_agents.shared.crew_context import TruncatingCrew
-from din_agents.shared.crew_tools import tools_with_change_brief, tools_without_change_brief
+from din_agents.shared.crew_tools import analysis_tools, execution_tools
 from din_agents.shared.model_routing import agent_llm_kwargs
+from din_agents.shared.task_guardrails import require_markdown_execution_brief
 
 
 @CrewBase
@@ -22,7 +23,8 @@ class ReactDinCrew:
     def patch_schema_steward(self) -> Agent:
         return Agent(
             config=self.agents_config["patch_schema_steward"],  # type: ignore[index]
-            tools=tools_with_change_brief("react_din"),
+            tools=analysis_tools("react_din"),
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("binding"),
         )
@@ -31,7 +33,8 @@ class ReactDinCrew:
     def component_coverage_maintainer(self) -> Agent:
         return Agent(
             config=self.agents_config["component_coverage_maintainer"],  # type: ignore[index]
-            tools=tools_with_change_brief("react_din"),
+            tools=analysis_tools("react_din"),
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("impact"),
         )
@@ -40,7 +43,18 @@ class ReactDinCrew:
     def library_quality_runner(self) -> Agent:
         return Agent(
             config=self.agents_config["library_quality_runner"],  # type: ignore[index]
-            tools=tools_without_change_brief("react_din"),
+            tools=execution_tools("react_din"),
+            max_iter=10,
+            verbose=cli_verbose(),
+            **agent_llm_kwargs("testing"),
+        )
+
+    @agent
+    def library_brief_runner(self) -> Agent:
+        return Agent(
+            config=self.agents_config["library_quality_runner"],  # type: ignore[index]
+            tools=[],
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("testing"),
         )
@@ -55,12 +69,17 @@ class ReactDinCrew:
     def review_docs_and_coverage(self) -> Task:
         return Task(
             config=with_cli_task_config(self.tasks_config["review_docs_and_coverage"]),  # type: ignore[index]
+            context=[],
         )
 
     @task
     def plan_library_validation(self) -> Task:
         return Task(
             config=with_cli_task_config(self.tasks_config["plan_library_validation"]),  # type: ignore[index]
+            agent=self.library_brief_runner(),
+            context=[],
+            guardrail=require_markdown_execution_brief,
+            guardrail_max_retries=4,
         )
 
     @crew

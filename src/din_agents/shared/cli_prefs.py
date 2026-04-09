@@ -14,7 +14,7 @@ _CLI_DESCRIPTION_SUFFIX = f"""
 
 {_CLI_MARK} (mandatory for CLI / CI):
 - Your **Final Answer** must be **complete markdown** with at least one `##` heading and concrete bullets or checklists.
-- Copy a literal `Path:` line and a literal `Route:` line from the pre-computed outputs above into your markdown — do not paraphrase those labels away.
+- Copy a literal `Path:` line and a literal `Route:` line from the task inputs above into your markdown — do not paraphrase those labels away.
 - You may use the file reader tool to inspect actual repo files before answering.
 - Do **not** reply with only intentions or preambles ("I will...", "I'll gather...", "Let me...", "I'll analyze...") — deliver the full artifact as your Final Answer.
 """
@@ -22,17 +22,17 @@ _CLI_DESCRIPTION_SUFFIX = f"""
 _CLI_DESCRIPTION_SUFFIX_COMPACT = f"""
 
 {_CLI_MARK} (CLI, compact — save input tokens):
-- Final Answer: complete markdown with `##` headings; copy literal `Path:` and `Route:` lines from pre-computed outputs above.
+- Final Answer: complete markdown with `##` headings; copy literal `Path:` and `Route:` lines from the task inputs above.
 - No preamble-only replies — deliver the full brief as your Final Answer.
 """
 
 _CLI_EXPECTED_OUTPUT_SUFFIX = (
     "\n\nThe deliverable must fully satisfy the terminal output contract in the task description "
-    "(no meta-only or single-sentence replies). Include literal Path: and Route: lines."
+    "(no meta-only or single-sentence replies). Include literal Path: and Route: lines from the task inputs."
 )
 
 _CLI_EXPECTED_OUTPUT_SUFFIX_COMPACT = (
-    "\n\nDeliverable: substantive markdown with Path/Route lines from pre-computed outputs and `##` sections."
+    "\n\nDeliverable: substantive markdown with Path/Route lines from the task inputs and `##` sections."
 )
 
 _MCP_SCOPE_GUARD = """

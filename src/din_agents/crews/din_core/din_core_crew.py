@@ -4,9 +4,12 @@ from crewai.project import CrewBase, agent, crew, task
 
 from din_agents.shared.cli_prefs import cli_verbose, with_cli_task_config
 from din_agents.shared.crew_context import TruncatingCrew
-from din_agents.shared.crew_tools import tools_with_change_brief, tools_without_change_brief
+from din_agents.shared.crew_tools import analysis_tools, execution_tools
 from din_agents.shared.model_routing import agent_llm_kwargs
-from din_agents.shared.task_guardrails import din_core_require_tools_and_markdown
+from din_agents.shared.task_guardrails import (
+    din_core_require_tools_and_markdown,
+    require_markdown_execution_brief,
+)
 
 
 @CrewBase
@@ -23,7 +26,8 @@ class DinCoreCrew:
     def patch_contract_steward(self) -> Agent:
         return Agent(
             config=self.agents_config["patch_contract_steward"],  # type: ignore[index]
-            tools=tools_with_change_brief("din_core"),
+            tools=analysis_tools("din_core"),
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("planning"),
         )
@@ -32,7 +36,8 @@ class DinCoreCrew:
     def registry_parity_engineer(self) -> Agent:
         return Agent(
             config=self.agents_config["registry_parity_engineer"],  # type: ignore[index]
-            tools=tools_with_change_brief("din_core"),
+            tools=analysis_tools("din_core"),
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("impact"),
         )
@@ -41,7 +46,18 @@ class DinCoreCrew:
     def rust_quality_runner(self) -> Agent:
         return Agent(
             config=self.agents_config["rust_quality_runner"],  # type: ignore[index]
-            tools=tools_without_change_brief("din_core"),
+            tools=execution_tools("din_core"),
+            max_iter=10,
+            verbose=cli_verbose(),
+            **agent_llm_kwargs("testing"),
+        )
+
+    @agent
+    def rust_brief_runner(self) -> Agent:
+        return Agent(
+            config=self.agents_config["rust_quality_runner"],  # type: ignore[index]
+            tools=[],
+            max_iter=10,
             verbose=cli_verbose(),
             **agent_llm_kwargs("testing"),
         )
@@ -58,6 +74,7 @@ class DinCoreCrew:
     def review_registry_and_runtime(self) -> Task:
         return Task(
             config=with_cli_task_config(self.tasks_config["review_registry_and_runtime"]),  # type: ignore[index]
+            context=[],
             guardrail=din_core_require_tools_and_markdown,
             guardrail_max_retries=4,
         )
@@ -66,6 +83,10 @@ class DinCoreCrew:
     def plan_rust_validation(self) -> Task:
         return Task(
             config=with_cli_task_config(self.tasks_config["plan_rust_validation"]),  # type: ignore[index]
+            agent=self.rust_brief_runner(),
+            context=[],
+            guardrail=require_markdown_execution_brief,
+            guardrail_max_retries=4,
         )
 
     @crew

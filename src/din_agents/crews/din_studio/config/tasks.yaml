@@ -2,21 +2,29 @@ assess_editor_ownership:
   description: >
     Analyze this request for din-studio: {request}
 
-    First, use the repo contract and change brief tools. Then use the file reader to inspect
-    the actual repository: list the top-level directory, read relevant source files, existing
-    docs, package.json, and any files the request would touch. Determine whether the request
-    belongs in din-studio, which editor or app surfaces it touches, and whether it crosses
-    into react-din or din-core ownership.
+    Start from the already-routed control-plane inputs below.
+
+    Path: {repo_path}
+    Route: {routing_route}
 
     Work from these inputs:
-    - Repo path: {repo_path}
     - Summary: {summary_path}
     - API summary: {api_summary_path}
     - Repo manifest: {repo_manifest_path}
+    - Routing reasons:
+    {routing_reasons}
     - Entry points:
     {entry_points}
     - Hard boundaries:
     {hard_boundaries}
+
+    Documentation-first workflow:
+    - Read the summary, API summary, and repo manifest first.
+    - Use the file reader only for exact follow-up files after that, preferring 1-3 targeted reads and never more than 4 reads total.
+    - Do not list the whole repo or broad-scan docs unless the request truly requires it.
+
+    Determine whether the request belongs in din-studio, which editor or app surfaces it touches,
+    and whether it crosses into react-din or din-core ownership.
   expected_output: >
     A markdown brief with ownership verdict, affected editor or app surfaces,
     sibling-repo coordination notes, and a summary of existing repo state based on
@@ -29,11 +37,14 @@ review_surface_requirements:
     Review the prior analysis and identify SURFACE_MANIFEST, TEST_MATRIX,
     feature doc, or automated-test obligations caused by this request.
 
+    Path: {repo_path}
+    Route: {routing_route}
+
     When editor-core modules in `typedoc.json` change, mention running `npm run docs:generate`
     (mirrors the `docs_generate` quality gate) for on-demand API reference.
 
-    Use the file reader to inspect actual manifest and doc files in the repository
-    relevant to the request.
+    Use the file reader only for exact manifest and doc files relevant to the request.
+    Prefer targeted reads over broad directory scans.
   expected_output: >
     A markdown review listing surface documentation, scenario, and test updates required
     before a visible workflow change would be considered complete — grounded in actual file
@@ -46,7 +57,10 @@ review_mcp_impact:
     Determine whether this request touches targets/mcp, bridge behavior, ws-based integrations,
     or related release-surface tests.
 
-    Use the file reader to inspect targets/mcp and related test files if relevant.
+    Path: {repo_path}
+    Route: {routing_route}
+
+    Use the file reader to inspect exact `targets/mcp` and related test files only if relevant.
   expected_output: >
     A markdown review listing MCP target impact, tests that must stay in sync,
     and any protocol-facing risks.
@@ -57,9 +71,16 @@ plan_studio_execution:
   description: >
     Produce the final din-studio execution brief for this request.
 
-    Use the file reader to verify the current state of any files that need changing. If the
-    request asks for concrete edits, use the file writer to make those changes in the
-    repository now. Read before writing.
+    Path: {repo_path}
+    Route: {routing_route}
+
+    Use the file reader to verify the current state of any files that need changing. Do not
+    repeat broad repo discovery in this task. If the request asks for concrete edits, use the
+    file writer to make those changes in the repository now. Read before writing. If no edit is
+    required, answer directly with the execution brief instead of calling tools again.
+
+    Do not look up quality gates with tools. They are already injected below and must be copied
+    exactly into the final markdown.
 
     Include AI catalog sync concerns where relevant, plus the exact quality gates below:
     {quality_gates}

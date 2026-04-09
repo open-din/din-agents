@@ -49,3 +49,19 @@ def test_agent_llm_kwargs_includes_optional_function_calling(monkeypatch: pytest
     monkeypatch.setenv("MODEL_FUNCTION_CALLING", "openai/gpt-4o-mini")
     kw2 = model_routing.agent_llm_kwargs("testing")
     assert "function_calling_llm" in kw2
+
+
+def test_get_llm_disables_anthropic_native_tools_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MODEL_PLANNING", "anthropic/claude-haiku-4-5-20251001")
+    monkeypatch.delenv("DIN_AGENTS_ENABLE_ANTHROPIC_NATIVE_TOOLS", raising=False)
+    llm = model_routing.get_llm("planning")
+    assert llm.is_anthropic is True
+    assert llm.supports_function_calling() is False
+
+
+def test_get_llm_can_opt_into_anthropic_native_tools(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MODEL_PLANNING", "anthropic/claude-haiku-4-5-20251001")
+    monkeypatch.setenv("DIN_AGENTS_ENABLE_ANTHROPIC_NATIVE_TOOLS", "1")
+    llm = model_routing.get_llm("planning")
+    assert llm.is_anthropic is True
+    assert llm.supports_function_calling() is True
