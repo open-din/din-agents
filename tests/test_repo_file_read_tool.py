@@ -41,6 +41,21 @@ def test_repo_file_read_not_found(tmp_path, monkeypatch) -> None:
         repo_profiles.get_repo_profiles.cache_clear()
 
 
+def test_repo_file_read_truncates_long_utf8(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("DIN_CORE_PATH", str(tmp_path))
+    monkeypatch.setenv("DIN_AGENTS_MAX_REPO_READ_TOOL_CHARS", "100")
+    repo_profiles.get_repo_profiles.cache_clear()
+    try:
+        (tmp_path / "big.txt").write_text("x" * 500)
+        tool = make_repo_file_read_tool("din_core")
+        result = tool._run(relative_path="big.txt")
+        assert result.count("x") == 100
+        assert "[truncated:" in result
+        assert "500 UTF-8 chars" in result
+    finally:
+        repo_profiles.get_repo_profiles.cache_clear()
+
+
 def test_repo_file_read_rejects_traversal(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("DIN_CORE_PATH", str(tmp_path))
     repo_profiles.get_repo_profiles.cache_clear()

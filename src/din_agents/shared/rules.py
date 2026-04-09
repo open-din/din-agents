@@ -131,9 +131,20 @@ def route_request(request: str, repo_hint: str | None = None) -> RoutingDecision
     affected_repos = [primary_repo]
     reasons.append(f"Primary repo resolved to `{primary_repo}`.")
 
+    explicit_cross_repo_scope = (
+        _mentions_multi_repo_scope(lowered)
+        or "cross-repo" in lowered
+        or "cross repo" in lowered
+        or "across " in lowered
+    )
+
     if _mentions_multi_repo_scope(lowered) and _mentions_repo_tooling(lowered):
         affected_repos = list(PRODUCT_REPO_IDS)
         reasons.append("Explicit workspace-wide tooling request detected.")
+    elif normalized_hint == primary_repo and not explicit_cross_repo_scope:
+        reasons.append(
+            f"Kept to explicit repo hint `{primary_repo}`; treat other repo mentions as coordination context."
+        )
     else:
         contract_repos = [repo_id for repo_id in _match_contract_repos(lowered) if repo_id != primary_repo]
         for repo_id in contract_repos:

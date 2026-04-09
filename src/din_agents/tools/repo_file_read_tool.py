@@ -11,6 +11,7 @@ from crewai.tools import BaseTool
 
 from din_agents.shared.repo_paths import resolved_path_under_repo
 from din_agents.shared.repo_profiles import get_repo_profile
+from din_agents.shared.runtime_prefs import max_repo_read_tool_chars
 
 _MAX_READ_BYTES = 200_000
 
@@ -66,6 +67,16 @@ class RepoFileReadTool(BaseTool):
         except UnicodeDecodeError:
             return f"Binary file ({len(raw)} bytes) — cannot display."
 
+        limit = max_repo_read_tool_chars()
+        if len(text) > limit:
+            full = len(text)
+            text = text[:limit].rstrip()
+            text += (
+                "\n\n---\n"
+                f"[truncated: {full} UTF-8 chars in file; showing first {limit}. "
+                "Open a smaller path (module / tests) or raise "
+                "`DIN_AGENTS_MAX_REPO_READ_TOOL_CHARS`.]\n"
+            )
         return text
 
     def _list_directory(self, target: Path, root: Path) -> str:

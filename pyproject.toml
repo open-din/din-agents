@@ -21,6 +21,7 @@ kickoff = "din_agents.main:kickoff"
 run_crew = "din_agents.main:kickoff"
 plot = "din_agents.main:plot"
 run_request = "din_agents.main:run_request_cli"
+run_din_core_audio_task = "din_agents.din_core_audio_tasks:main"
 
 [build-system]
 requires = ["hatchling"]

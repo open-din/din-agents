@@ -46,3 +46,17 @@ def test_husky_for_each_project_routes_product_repos_only():
     assert decision.route == "cross_repo"
     assert decision.cross_repo is True
     assert decision.affected_repos == ["din_core", "react_din", "din_studio"]
+
+
+def test_explicit_repo_hint_stays_single_repo_for_coordination_language():
+    decision = route_request(
+        (
+            "Implement a din-core audio surface. "
+            "Coordinate react-din schema/types only if persisted serialization changes. "
+            "Touch din-studio only when editor surfaces must reflect this node."
+        ),
+        repo_hint="din_core",
+    )
+    assert decision.route == "din_core"
+    assert decision.cross_repo is False
+    assert decision.affected_repos == ["din_core"]

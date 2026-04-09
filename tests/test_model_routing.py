@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from din_agents.shared import model_routing
@@ -12,7 +10,7 @@ def test_get_model_switch_uses_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("MODEL_CODING", "openai/gpt-4.1")
     monkeypatch.setenv("MODEL_TESTING", "openai/gpt-4o-mini")
     monkeypatch.setenv("MODEL_FIXING", "openai/gpt-4.1")
-    monkeypatch.setenv("MODEL_DOC", "anthropic/claude-3-5-haiku-20241022")
+    monkeypatch.setenv("MODEL_DOC", "anthropic/claude-haiku-4-5-20251001")
     monkeypatch.setenv("MODEL_DEFAULT", "openai/gpt-4o-mini")
 
     assert model_routing.get_model("planning") == "anthropic/claude-opus-4"
@@ -21,7 +19,7 @@ def test_get_model_switch_uses_env(monkeypatch: pytest.MonkeyPatch) -> None:
     assert model_routing.get_model("coding") == "openai/gpt-4.1"
     assert model_routing.get_model("testing") == "openai/gpt-4o-mini"
     assert model_routing.get_model("fixing") == "openai/gpt-4.1"
-    assert model_routing.get_model("doc") == "anthropic/claude-3-5-haiku-20241022"
+    assert model_routing.get_model("doc") == "anthropic/claude-haiku-4-5-20251001"
     assert model_routing.get_model("unknown") == "openai/gpt-4o-mini"
 
 

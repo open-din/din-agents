@@ -1,14 +1,23 @@
 assess_patch_contract:
   description: >
-    Analyze this request for din-core: {request}
+    Analyze this request for din-core and produce a **complete markdown brief**.
 
-    First, use the repo contract and change brief tools. Then use the file reader to inspect
-    the actual repository: list the top-level directory, read relevant source files, existing
-    docs, Cargo.toml, and any files the request would touch. Decide whether the request belongs
-    in din-core, which crates or contract surfaces it touches, and whether it impacts react-din.
+    Request: {request}
 
-    Work from these inputs:
-    - Repo path: {repo_path}
+    ## Pre-computed repo contract (from repo_contract_lookup)
+
+    {repo_contract_output}
+
+    ## Pre-computed routing brief (from change_brief_builder)
+
+    {change_brief_output}
+
+    Use the file reader to inspect the repo at {repo_path}: list the top-level directory,
+    read relevant source files, Cargo.toml, existing docs, and any files the request touches.
+    Decide whether this belongs in din-core, which crates or contract surfaces it touches,
+    and whether it impacts react-din.
+
+    Additional inputs:
     - Summary: {summary_path}
     - API summary: {api_summary_path}
     - Repo manifest: {repo_manifest_path}
@@ -16,27 +25,54 @@ assess_patch_contract:
     {entry_points}
     - Hard boundaries:
     {hard_boundaries}
+
+    Your Final Answer MUST:
+    - Be complete markdown with multiple `##` headings and concrete bullets.
+    - Include a literal `Path:` line (copy from the repo contract above).
+    - Include a literal `Route:` line (copy from the routing brief above).
+    - NOT be a short preamble like "I will..." — deliver the full brief now.
   expected_output: >
-    A markdown brief with ownership verdict, affected din-core surfaces, likely crates,
-    public contract risk, sibling-repo coordination needed, and a summary of existing repo
-    state based on what you read from the actual files.
+    A markdown brief (with `##` headings) containing ownership verdict, affected din-core
+    surfaces, likely crates, public contract risk, sibling-repo coordination needed, and a
+    summary of existing repo state based on actual files read. Must include literal Path: and
+    Route: lines copied from the pre-computed outputs.
   agent: patch_contract_steward
   markdown: true
 
 review_registry_and_runtime:
   description: >
-    Review the prior analysis and identify the exact registry, node ID, patch migration,
-    round-trip, interface naming, FFI, or WASM implications of this request.
+    Review the prior analysis and produce a **complete markdown review**.
+
+    ## Pre-computed repo contract (from repo_contract_lookup)
+
+    {repo_contract_output}
+
+    ## Pre-computed routing brief (from change_brief_builder)
+
+    {change_brief_output}
+
+    Use the file reader to inspect actual source files — crate lib.rs files,
+    schema and fixture files, existing examples, and tests relevant to the request.
+    Identify the exact registry, node ID, patch migration, round-trip, interface naming,
+    FFI, or WASM implications of this request.
+
+    If the injected prior-task section ends with a truncation note, rely on repo file reads
+    and the verbatim request from inputs for missing detail.
+
+    Request: {request}
 
     When `pub` rustdoc surfaces move, call out `./scripts/generate-docs.sh` alongside other
     quality gates so HTML docs and the short `docs/generated` index stay honest.
 
-    Use the file reader to inspect actual source files in the repository: read crate lib.rs files,
-    schema and fixture files, existing examples, and test files relevant to the request.
-    Use the repo profile and quality gate tools again if needed.
+    Your Final Answer MUST:
+    - Be complete markdown with multiple `##` headings and concrete bullets.
+    - Include a literal `Path:` line (copy from the repo contract above).
+    - Include a literal `Route:` line (copy from the routing brief above).
+    - NOT be a short preamble — deliver the full review now.
   expected_output: >
-    A markdown review listing registry and runtime risks, required schema or fixture touchpoints,
-    and any release-gate concerns — grounded in actual file contents you read from the repo.
+    A markdown review (with `##` headings) listing registry and runtime risks, required schema
+    or fixture touchpoints, and release-gate concerns — grounded in actual file contents read
+    from the repo. Must include literal Path: and Route: lines.
   agent: registry_parity_engineer
   markdown: true
 

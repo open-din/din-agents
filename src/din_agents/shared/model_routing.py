@@ -1,18 +1,20 @@
 """LiteLLM-compatible model routing via environment variables.
 
 CrewAI resolves completions through LiteLLM when installed. Model strings must
-follow LiteLLM's ``provider/model`` convention (e.g. ``anthropic/claude-sonnet-4-5-20250929``,
-``openai/gpt-4o``). Older Anthropic snapshot IDs may return ``not_found``; override via env.
+follow LiteLLM's ``provider/model`` convention (e.g. ``ollama/qwen2.5-coder:14b``,
+``anthropic/claude-sonnet-4-5-20250929``, ``openai/gpt-4o``). Override any role via env.
+For Anthropic, use **versioned** model ids (e.g. ``anthropic/claude-haiku-4-5-20251001``); aliases
+like ``*-latest`` often return ``not_found_error`` from the API.
+
 See https://docs.litellm.ai/docs/providers
 
-Role mapping (requested):
-  - Planner  → Claude   (MODEL_PLANNING)
-  - Impact   → Claude   (MODEL_IMPACT)
-  - Binding  → Codex    (MODEL_BINDING)   # typically OpenAI route in LiteLLM
-  - Coder    → Codex    (MODEL_CODING)
-  - Tester   → cheap    (MODEL_TESTING)
-  - Fixer    → Codex    (MODEL_FIXING)
-  - Doc      → Claude   (MODEL_DOC)
+Default stack is **Ollama** (ensure models are pulled and ``OLLAMA_API_BASE`` is set if not localhost):
+
+  - Planning / impact / doc / testing / fallback → ``ollama/qwen2.5-coder:14b``
+  - Binding / coding / fixing → ``ollama/deepseek-coder:16b``
+
+Role env vars: ``MODEL_PLANNING``, ``MODEL_IMPACT``, ``MODEL_BINDING``, ``MODEL_CODING``,
+``MODEL_TESTING``, ``MODEL_FIXING``, ``MODEL_DOC``, ``MODEL_DEFAULT``.
 """
 
 from __future__ import annotations
@@ -22,16 +24,16 @@ from typing import Any
 
 from crewai import LLM
 
-# Defaults are LiteLLM route strings; override via env for your keys and providers.
+# Defaults: Ollama via LiteLLM; override via env for cloud providers or other local models.
 _DEFAULTS: dict[str, str] = {
-    "planning": "anthropic/claude-sonnet-4-5-20250929",
-    "impact": "anthropic/claude-sonnet-4-5-20250929",
-    "binding": "openai/gpt-4o",
-    "coding": "openai/gpt-4o",
-    "testing": "openai/gpt-4o-mini",
-    "fixing": "openai/gpt-4o",
-    "doc": "anthropic/claude-sonnet-4-5-20250929",
-    "default": "openai/gpt-4o-mini",
+    "planning": "ollama/qwen2.5-coder:14b",
+    "impact": "ollama/qwen2.5-coder:14b",
+    "binding": "ollama/deepseek-coder:16b",
+    "coding": "ollama/deepseek-coder:16b",
+    "testing": "ollama/qwen2.5-coder:14b",
+    "fixing": "ollama/deepseek-coder:16b",
+    "doc": "ollama/qwen2.5-coder:14b",
+    "default": "ollama/qwen2.5-coder:14b",
 }
 
 _ENV_KEYS: dict[str, str] = {

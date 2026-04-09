@@ -1,8 +1,9 @@
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Process, Task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from crewai.project import CrewBase, agent, crew, task
 
 from din_agents.shared.cli_prefs import cli_verbose, with_cli_task_config
+from din_agents.shared.crew_context import TruncatingCrew
 from din_agents.shared.crew_tools import tools_with_change_brief, tools_without_change_brief
 from din_agents.shared.model_routing import agent_llm_kwargs
 from din_agents.shared.task_guardrails import din_core_require_tools_and_markdown
@@ -68,8 +69,8 @@ class DinCoreCrew:
         )
 
     @crew
-    def crew(self) -> Crew:
-        return Crew(
+    def crew(self) -> TruncatingCrew:
+        return TruncatingCrew(
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,

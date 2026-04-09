@@ -5,21 +5,34 @@ from __future__ import annotations
 import os
 from typing import Any
 
+from din_agents.shared.runtime_prefs import compact_prompts_enabled
+
 _CLI_MARK = "Terminal output contract"
 
 
 _CLI_DESCRIPTION_SUFFIX = f"""
 
 {_CLI_MARK} (mandatory for CLI / CI):
-- Your **final answer** must be **complete markdown** with at least one `##` heading and concrete bullets or checklists.
-- Do **not** reply with only intentions or preambles ("I will...", "I'll gather...", "Let me...", "I'll analyze...") without delivering the full artifact in this turn.
-- When this task says to use tools first, call `repo_contract_lookup` and `change_brief_builder` at least once **before** the final answer.
-- When calling `change_brief_builder`, set `request` to the **verbatim** change description from the user (the same topic as in this task), not a generic placeholder like "analyze this request".
+- Your **Final Answer** must be **complete markdown** with at least one `##` heading and concrete bullets or checklists.
+- Copy a literal `Path:` line and a literal `Route:` line from the pre-computed outputs above into your markdown — do not paraphrase those labels away.
+- You may use the file reader tool to inspect actual repo files before answering.
+- Do **not** reply with only intentions or preambles ("I will...", "I'll gather...", "Let me...", "I'll analyze...") — deliver the full artifact as your Final Answer.
+"""
+
+_CLI_DESCRIPTION_SUFFIX_COMPACT = f"""
+
+{_CLI_MARK} (CLI, compact — save input tokens):
+- Final Answer: complete markdown with `##` headings; copy literal `Path:` and `Route:` lines from pre-computed outputs above.
+- No preamble-only replies — deliver the full brief as your Final Answer.
 """
 
 _CLI_EXPECTED_OUTPUT_SUFFIX = (
     "\n\nThe deliverable must fully satisfy the terminal output contract in the task description "
-    "(no meta-only or single-sentence replies)."
+    "(no meta-only or single-sentence replies). Include literal Path: and Route: lines."
+)
+
+_CLI_EXPECTED_OUTPUT_SUFFIX_COMPACT = (
+    "\n\nDeliverable: substantive markdown with Path/Route lines from pre-computed outputs and `##` sections."
 )
 
 _MCP_SCOPE_GUARD = """
@@ -41,15 +54,17 @@ def with_cli_task_config(
 ) -> dict[str, Any]:
     """Merge shared CLI discipline into a CrewAI task config loaded from YAML."""
     cfg = dict(task_cfg)
+    desc_suffix = _CLI_DESCRIPTION_SUFFIX_COMPACT if compact_prompts_enabled() else _CLI_DESCRIPTION_SUFFIX
+    exp_suffix = _CLI_EXPECTED_OUTPUT_SUFFIX_COMPACT if compact_prompts_enabled() else _CLI_EXPECTED_OUTPUT_SUFFIX
     desc = str(cfg.get("description", "")).rstrip()
     if _CLI_MARK not in desc:
-        cfg["description"] = desc + _CLI_DESCRIPTION_SUFFIX + extra_description_suffix
+        cfg["description"] = desc + desc_suffix + extra_description_suffix
     elif extra_description_suffix:
         cfg["description"] = desc + extra_description_suffix
 
     exp = str(cfg.get("expected_output", "")).rstrip()
     if _CLI_MARK not in exp:
-        cfg["expected_output"] = exp + _CLI_EXPECTED_OUTPUT_SUFFIX
+        cfg["expected_output"] = exp + exp_suffix
     return cfg
 
 
