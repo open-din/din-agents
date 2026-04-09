@@ -1,5 +1,27 @@
 # DIN Agents
 
+## PURPOSE
+
+Control plane for repo routing, quality-gate selection, and DIN workspace automation.
+
+## ENTRY FILES
+
+- `project/SUMMARY.md`
+- `src/din_agents/flow.py`
+- `src/din_agents/shared/repo_profiles.py`
+- `src/din_agents/shared/rules.py`
+
+## DO NOT TOUCH
+
+- Public patch schema or package exports -> `react-din`
+- Runtime semantics, registry, migration, FFI/WASM -> `din-core`
+- Editor, shell, launcher, MCP workflows -> `din-studio`
+
+## RELATED REPOS
+
+- `../project/WORKSPACE_MANIFEST.json` is the routing source of truth
+- `react-din`, `din-core`, and `din-studio` provide owned product surfaces
+
 `din-agents` is the CrewAI control plane for the sibling repositories:
 
 - `din-core`

@@ -9,10 +9,13 @@ assess_patch_contract:
 
     Work from these inputs:
     - Repo path: {repo_path}
-    - Canonical docs:
-    {canonical_docs}
-    - Boundaries:
-    {boundaries}
+    - Summary: {summary_path}
+    - API summary: {api_summary_path}
+    - Repo manifest: {repo_manifest_path}
+    - Entry points:
+    {entry_points}
+    - Hard boundaries:
+    {hard_boundaries}
   expected_output: >
     A markdown brief with ownership verdict, affected din-core surfaces, likely crates,
     public contract risk, sibling-repo coordination needed, and a summary of existing repo

@@ -10,10 +10,13 @@ assess_editor_ownership:
 
     Work from these inputs:
     - Repo path: {repo_path}
-    - Canonical docs:
-    {canonical_docs}
-    - Boundaries:
-    {boundaries}
+    - Summary: {summary_path}
+    - API summary: {api_summary_path}
+    - Repo manifest: {repo_manifest_path}
+    - Entry points:
+    {entry_points}
+    - Hard boundaries:
+    {hard_boundaries}
   expected_output: >
     A markdown brief with ownership verdict, affected editor or app surfaces,
     sibling-repo coordination notes, and a summary of existing repo state based on

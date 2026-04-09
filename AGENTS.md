@@ -1,154 +1,46 @@
-# AGENTS — din-agents (CONTROL PLANE)
+# AGENTS — din-agents
 
-## CORE RULE
-Route to the correct repository. Load MINIMUM context. Avoid cross-repo unless required.
+## LOAD ORDER
 
----
+1. `AGENTS.md`
+2. `project/SUMMARY.md`
+3. `../docs/summaries/din-agents-api.md`
+4. `project/REPO_MANIFEST.json`
+5. One matching file in `project/skills/`
 
-## 1. ROLE
+## ROUTE HERE WHEN
 
-din-agents = orchestration layer
+- The request changes routing, quality-gate selection, CrewAI prompts, repo ownership metadata, or workspace automation.
+- The request changes `src/din_agents/shared/repo_profiles.py`, `rules.py`, `flow.py`, or repo-scoped tools.
 
-- routes tasks across:
-  - react-din (API)
-  - din-core (runtime)
-  - din-studio (UI)
+## ROUTE AWAY WHEN
 
-Does NOT own domain logic.
+- Public patch schema, exports, or docs/components -> `react-din`
+- Runtime, compiler, registry, migration, FFI, WASM -> `din-core`
+- Editor, MCP, launcher, or shell workflows -> `din-studio`
 
----
+## ENTRY POINTS
 
-## 2. ROUTING (CRITICAL)
+- `src/din_agents/flow.py`
+- `src/din_agents/shared/repo_profiles.py`
+- `src/din_agents/shared/rules.py`
+- `project/REPO_MANIFEST.json`
 
-Map task → repo:
+## SKILL MAP
 
-- "component / API / schema" → react-din
-- "runtime / compiler / validation" → din-core
-- "UI / editor / workflow / MCP" → din-studio
-- "automation / routing / crews" → din-agents
+- Repo routing -> `project/skills/skills-router/SKILL.md`
+- CrewAI bootstrap -> `project/skills/getting-started/SKILL.md`
+- Agent shaping -> `project/skills/design-agent/SKILL.md`
+- Task/output shaping -> `project/skills/design-task/SKILL.md`
+- Docs lookup -> `project/skills/ask-docs/SKILL.md`
 
-If unclear → choose smallest scope
+## HARD RULES
 
----
+- Routing metadata comes from `../project/WORKSPACE_MANIFEST.json`.
+- Keep repo file tools scoped to one repo root.
+- Do not redefine sibling ownership in code without updating manifests and docs.
 
-## 3. HOOKS (MANDATORY)
+## VALIDATION
 
-### HOOK: ROUTE_TASK
-IF task received:
-
-1. classify task
-2. select ONE repo
-3. STOP loading others
-
----
-
-### HOOK: CROSS_REPO
-IF task involves:
-
-- schema
-- serialization
-- runtime + UI
-
-THEN:
-
-1. identify contract owner (source of truth)
-2. update owner FIRST
-3. propagate to consumers
-
----
-
-### HOOK: REPO_PROFILE
-
-LOAD ONLY:
-- src/din_agents/shared/repo_profiles.py
-
-USE:
-- repo-specific commands
-- quality gates
-
----
-
-### HOOK: FLOW_EXECUTION
-
-IF task uses crew/flow:
-
-LOAD ONLY:
-- src/din_agents/flow.py
-- relevant crew module
-
----
-
-### HOOK: DOCS
-
-IF missing info:
-
-LOAD (max 2):
-1. docs/summaries
-2. README / FlowArchitecture.md
-3. docs/generated
-
-STOP when sufficient
-
----
-
-## 4. HARD CONSTRAINTS
-
-- ALWAYS start with 1 repo
-- NEVER load multiple repos by default
-- cross-repo ONLY if contract requires
-
----
-
-### NEVER:
-
-- implement domain logic here
-- duplicate logic from other repos
-- modify multiple repos blindly
-
----
-
-## 5. EXECUTION LOOP
-
-1. classify task
-2. route to repo
-3. load minimal context
-4. execute
-5. validate in target repo
-
----
-
-## 6. CONTEXT LIMITS
-
-- max 1 repo (default)
-- max 2 files
-- NEVER scan repos
-- NEVER load all repos
-
----
-
-## 7. SELF-OPTIMIZATION
-
-Continuously:
-
-- reduce repo scope
-- drop unused repos
-- minimize file loading
-
-If multiple repos loaded → reduce
-
----
-
-## 8. LOAD DEEP CONTEXT ONLY IF
-
-- routing unclear
-- contract ambiguous
-- failing validation
-
----
-
-## 9. VALIDATION
-
-uv run pytest  
-uv run ruff check src  
-
-(optional) generate-docs
+- `uv run pytest`
+- `uv run ruff check src`

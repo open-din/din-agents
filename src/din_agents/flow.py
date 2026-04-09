@@ -59,7 +59,7 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
         if not self.state.request:
             self.state.request = (
                 "Assess a DIN change request and decide whether it belongs in "
-                "din-core, react-din, din-studio, or across multiple repos."
+                "din-core, react-din, din-studio, din-agents, or across multiple repos."
             )
         return self.state.request
 
@@ -98,19 +98,50 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
         self.state.final_output = self._render_final_report()
         return self.state.final_output
 
-    @listen("cross_repo")
-    def run_cross_repo(self):
-        for repo_id in self.state.affected_repos:
-            self._run_repo_crew(repo_id)
+    @listen("din_agents")
+    def run_din_agents(self):
+        self._run_repo_brief("din_agents")
         self.state.final_output = self._render_final_report()
         return self.state.final_output
 
-    @listen(or_(run_din_core, run_react_din, run_din_studio, run_cross_repo))
+    @listen("cross_repo")
+    def run_cross_repo(self):
+        for repo_id in self.state.affected_repos:
+            self._run_repo_brief(repo_id)
+        self.state.final_output = self._render_final_report()
+        return self.state.final_output
+
+    @listen(or_(run_din_core, run_react_din, run_din_studio, run_din_agents, run_cross_repo))
     def save_report(self, _result: str):
         report_path = Path(self.state.report_path)
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_path.write_text(self.state.final_output, encoding="utf-8")
         return str(report_path)
+
+    def _run_repo_brief(self, repo_id: str) -> None:
+        if repo_id == "din_agents":
+            profile = get_repo_profile(repo_id)
+            lines = [
+                "Ownership verdict: `din-agents`",
+                "",
+                "Use the manifest-driven route card below before opening source files.",
+                "",
+                "```text",
+                "\n".join(
+                    [
+                        f"Repo: {profile.display_name}",
+                        f"Role: {profile.role}",
+                        "Entry points:",
+                        *[f"- {item}" for item in profile.entry_points],
+                        "Hard boundaries:",
+                        *[f"- {item}" for item in profile.hard_boundaries],
+                    ]
+                ),
+                "```",
+            ]
+            self.state.repo_outputs[repo_id] = "\n".join(lines)
+            return
+        self._run_repo_crew(repo_id)
 
     def _run_repo_crew(self, repo_id: str) -> None:
         crew_map = {
@@ -149,8 +180,11 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
             "request": self.state.request,
             "repo_hint": self.state.repo_hint,
             "repo_path": profile.path,
-            "canonical_docs": "\n".join(f"- {path}" for path in profile.canonical_docs),
-            "boundaries": "\n".join(f"- {item}" for item in profile.boundaries),
+            "summary_path": profile.summary_path,
+            "api_summary_path": profile.api_summary_path,
+            "repo_manifest_path": profile.repo_manifest_path,
+            "entry_points": "\n".join(f"- {path}" for path in profile.entry_points),
+            "hard_boundaries": "\n".join(f"- {item}" for item in profile.hard_boundaries),
             "quality_gates": "\n".join(
                 f"- `{command}`" for command in self.state.quality_commands.get(repo_id, [])
             ),
@@ -158,7 +192,7 @@ class DinControlPlaneFlow(Flow[ControlPlaneState]):
 
     def _render_final_report(self) -> str:
         affected_ids = list(self.state.affected_repos)
-        if not affected_ids and self.state.route in ("din_core", "react_din", "din_studio"):
+        if not affected_ids and self.state.route in ("din_core", "react_din", "din_studio", "din_agents"):
             affected_ids = [self.state.route]
         reasons = list(self.state.reasons)
         if not reasons:

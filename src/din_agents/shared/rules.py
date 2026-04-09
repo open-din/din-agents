@@ -16,63 +16,27 @@ REPO_ALIASES = {
     "react_din": "react_din",
     "din-studio": "din_studio",
     "din_studio": "din_studio",
+    "din-agents": "din_agents",
+    "din_agents": "din_agents",
 }
 
-ALL_REPO_IDS: tuple[str, ...] = ("din_core", "react_din", "din_studio")
+PRODUCT_REPO_IDS: tuple[str, ...] = ("din_core", "react_din", "din_studio")
 
 _MULTI_REPO_SCOPE_PHRASES = (
     "each project",
-    "each projects",
     "each repo",
     "all projects",
     "all repos",
     "every project",
     "every repo",
-    "for all three",
-    "all three repos",
     "across all",
 )
-
-_REPO_WIDE_TOOLING_HINTS = (
-    "husky",
-    "pre-commit",
-    "precommit",
-    "git hook",
-    "git hooks",
-)
-
-
-def _mentions_multi_repo_scope(lowered: str) -> bool:
-    if any(p in lowered for p in _MULTI_REPO_SCOPE_PHRASES):
-        return True
-    if "each" in lowered and ("project" in lowered or "repo" in lowered):
-        return True
-    if "all" in lowered and ("project" in lowered or "repo" in lowered):
-        return True
-    return False
-
-
-def _mentions_repo_tooling(lowered: str) -> bool:
-    return any(h in lowered for h in _REPO_WIDE_TOOLING_HINTS)
-
-
-CROSS_REPO_KEYWORDS = (
-    "cross-repo",
-    "cross repo",
-    "boundary",
-    "ownership",
-    "compatibility",
-    "shared contract",
-    "patch schema",
-    "patch contract",
-    "public contract",
-    "public api",
-    "node catalog parity",
-)
+_REPO_WIDE_TOOLING_HINTS = ("husky", "pre-commit", "precommit", "git hook", "git hooks")
 
 
 class RoutingDecision(BaseModel):
     """Structured routing outcome listing target repos and rationale."""
+
     route: str
     affected_repos: list[str] = Field(default_factory=list)
     cross_repo: bool = False
@@ -94,59 +58,92 @@ def _extract_repo_mentions(text: str) -> list[str]:
     return mentions
 
 
-def route_request(request: str, repo_hint: str | None = None) -> RoutingDecision:
-    """Score repo keywords, hints, and cross-repo phrases to choose affected repos."""
-    lowered = request.lower()
+def _mentions_multi_repo_scope(lowered: str) -> bool:
+    return any(phrase in lowered for phrase in _MULTI_REPO_SCOPE_PHRASES)
+
+
+def _mentions_repo_tooling(lowered: str) -> bool:
+    return any(hint in lowered for hint in _REPO_WIDE_TOOLING_HINTS)
+
+
+def _search_terms(values: list[str]) -> set[str]:
+    terms: set[str] = set()
+    for value in values:
+        lowered = value.lower()
+        if lowered:
+            terms.add(lowered)
+        if "/" in lowered:
+            terms.add(lowered.rsplit("/", 1)[-1])
+    return terms
+
+
+def _score_request(lowered: str) -> dict[str, int]:
+    profiles = get_repo_profiles()
     scores: dict[str, int] = defaultdict(int)
+    for repo_id, profile in profiles.items():
+        tag_terms = _search_terms(profile.tags)
+        entry_terms = _search_terms(profile.entry_points)
+        owned_terms = _search_terms(profile.owned_contracts)
+        if profile.role in lowered:
+            scores[repo_id] += 1
+        for term in tag_terms:
+            if term in lowered:
+                scores[repo_id] += 2
+        for term in entry_terms:
+            if term in lowered:
+                scores[repo_id] += 2
+        for term in owned_terms:
+            if term in lowered:
+                scores[repo_id] += 1
+    return scores
+
+
+def _match_contract_repos(lowered: str) -> list[str]:
+    matches: list[str] = []
+    for repo_id, profile in get_repo_profiles().items():
+        contract_terms = _search_terms(profile.owned_contracts + profile.shared_contracts)
+        if any(term in lowered for term in contract_terms):
+            matches.append(repo_id)
+    return matches
+
+
+def route_request(request: str, repo_hint: str | None = None) -> RoutingDecision:
+    """Route to one repo by default and escalate only for shared contracts or explicit workspace scope."""
+    lowered = request.lower()
+    scores = _score_request(lowered)
     reasons: list[str] = []
-    mentioned = _extract_repo_mentions(request)
+    mentions = _extract_repo_mentions(request)
     normalized_hint = _normalize_repo_hint(repo_hint)
 
-    profiles = get_repo_profiles()
-    for repo_id, profile in profiles.items():
-        for keyword in profile.routing_keywords:
-            if keyword in lowered:
-                scores[repo_id] += 1
-
-    if normalized_hint in profiles:
-        scores[normalized_hint] += 3
+    if normalized_hint in get_repo_profiles():
+        scores[normalized_hint] += 5
         reasons.append(f"Explicit repo hint selected `{normalized_hint}`.")
 
-    if mentioned:
-        for repo_id in mentioned:
+    if mentions:
+        for repo_id in mentions:
             scores[repo_id] += 4
         reasons.append(
-            "Request explicitly mentions: " + ", ".join(get_repo_profile(r).display_name for r in mentioned)
+            "Request explicitly mentions: "
+            + ", ".join(get_repo_profile(repo_id).display_name for repo_id in mentions)
         )
 
     primary_repo = max(scores, key=scores.get) if scores else "din_studio"
-    affected_repos = list(dict.fromkeys(mentioned or [primary_repo]))
+    affected_repos = [primary_repo]
+    reasons.append(f"Primary repo resolved to `{primary_repo}`.")
 
     if _mentions_multi_repo_scope(lowered) and _mentions_repo_tooling(lowered):
-        affected_repos = list(ALL_REPO_IDS)
-        reasons.append(
-            "Request applies tooling across DIN repos; routing all siblings (din-core, react-din, din-studio)."
-        )
-
-    if any(keyword in lowered for keyword in CROSS_REPO_KEYWORDS):
-        if primary_repo in {"din_core", "react_din"}:
-            for repo_id in ("din_core", "react_din"):
-                if repo_id not in affected_repos:
-                    affected_repos.append(repo_id)
-        if "studio" in lowered or "editor" in lowered or "node catalog" in lowered:
-            if "din_studio" not in affected_repos:
-                affected_repos.append("din_studio")
-        reasons.append("Request contains cross-repo contract or ownership language.")
-
-    if primary_repo == "din_studio" and ("patch schema" in lowered or "public api" in lowered):
-        if "react_din" not in affected_repos:
-            affected_repos.append("react_din")
-        reasons.append("Studio request touches a surface owned by react-din.")
-
-    if primary_repo == "din_studio" and ("rust" in lowered or "registry" in lowered or "ffi" in lowered):
-        if "din_core" not in affected_repos:
-            affected_repos.append("din_core")
-        reasons.append("Studio request references runtime or registry authority owned by din-core.")
+        affected_repos = list(PRODUCT_REPO_IDS)
+        reasons.append("Explicit workspace-wide tooling request detected.")
+    else:
+        contract_repos = [repo_id for repo_id in _match_contract_repos(lowered) if repo_id != primary_repo]
+        for repo_id in contract_repos:
+            if repo_id not in affected_repos:
+                affected_repos.append(repo_id)
+        if contract_repos:
+            reasons.append(
+                "Shared or owned contract language detected for: "
+                + ", ".join(get_repo_profile(repo_id).display_name for repo_id in contract_repos)
+            )
 
     cross_repo = len(affected_repos) > 1
     if cross_repo:
@@ -154,17 +151,21 @@ def route_request(request: str, repo_hint: str | None = None) -> RoutingDecision
             "Escalated to cross-repo handling for: "
             + ", ".join(get_repo_profile(repo_id).display_name for repo_id in affected_repos)
         )
+        route = "cross_repo"
+    else:
+        route = primary_repo
+        reasons.append("Kept to one repo by default.")
 
     return RoutingDecision(
-        route="cross_repo" if cross_repo else primary_repo,
+        route=route,
         affected_repos=affected_repos,
         cross_repo=cross_repo,
-        reasons=reasons or [f"Primary repo resolved to `{primary_repo}` from repo keywords."],
+        reasons=reasons,
     )
 
 
 def select_quality_gates(affected_repos: list[str]) -> dict[str, list[str]]:
-    """Map repo ids to ordered shell commands from each :class:`RepoProfile`."""
+    """Map repo ids to ordered shell commands from each repo profile."""
     selection: dict[str, list[str]] = {}
     for repo_id in affected_repos:
         profile = get_repo_profile(repo_id)

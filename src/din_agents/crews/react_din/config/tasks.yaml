@@ -10,10 +10,13 @@ assess_public_surface:
 
     Work from these inputs:
     - Repo path: {repo_path}
-    - Canonical docs:
-    {canonical_docs}
-    - Boundaries:
-    {boundaries}
+    - Summary: {summary_path}
+    - API summary: {api_summary_path}
+    - Repo manifest: {repo_manifest_path}
+    - Entry points:
+    {entry_points}
+    - Hard boundaries:
+    {hard_boundaries}
   expected_output: >
     A markdown brief with ownership verdict, affected public API or schema surfaces,
     package/export concerns, cross-repo coordination notes, and a summary of existing

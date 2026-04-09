@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "repo": {
+    "id": "din_agents",
+    "display_name": "din-agents",
+    "path": "din-agents",
+    "role": "orchestration",
+    "tags": [
+      "automation",
+      "routing",
+      "quality gates",
+      "crewai",
+      "repo selection",
+      "control plane",
+      "workspace manifest"
+    ],
+    "depends_on": [
+      "din_core",
+      "react_din",
+      "din_studio"
+    ],
+    "used_by": [
+      "workspace operators"
+    ],
+    "entry_points": [
+      "src/din_agents/flow.py",
+      "src/din_agents/shared/repo_profiles.py",
+      "src/din_agents/shared/rules.py",
+      "docs/FlowArchitecture.md"
+    ],
+    "owned_contracts": [
+      "repo routing",
+      "quality gate selection",
+      "control plane prompt inputs"
+    ],
+    "shared_contracts": [
+      "workspace routing metadata",
+      "repo ownership map"
+    ],
+    "hard_boundaries": [
+      "Do not redefine sibling repo ownership in code without updating the workspace manifest.",
+      "Do not own patch, runtime, or editor semantics.",
+      "Keep repo file tools scoped to one repo root at a time."
+    ],
+    "validation_commands": [
+      "uv run pytest",
+      "uv run ruff check src"
+    ],
+    "summary_path": "project/SUMMARY.md",
+    "api_summary_path": "../docs/summaries/din-agents-api.md",
+    "repo_manifest_path": "project/REPO_MANIFEST.json",
+    "skills_path": "project/skills",
+    "linked_manifests": []
+  }
+}
