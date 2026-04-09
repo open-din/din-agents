@@ -1,69 +1,154 @@
-# AGENTS
+# AGENTS — din-agents (CONTROL PLANE)
 
-Canonical contract for Codex, Claude, Cursor, and other agents operating in `din-agents`.
+## CORE RULE
+Route to the correct repository. Load MINIMUM context. Avoid cross-repo unless required.
 
-## Scope
+---
 
-Python CrewAI control plane that routes work across `din-core`, `react-din`, and `din-studio`. For product intent in those repos, use each sibling’s `project/SUMMARY.md`, `project/USERFLOW.md`, and `project/TEST_MATRIX.md`—cite them; do not duplicate them here.
+## 1. ROLE
 
-## Quality gates (pre-merge)
+din-agents = orchestration layer
 
-From this repository root:
+- routes tasks across:
+  - react-din (API)
+  - din-core (runtime)
+  - din-studio (UI)
 
-1. `uv run pytest`
-2. `uv run ruff check src`
-3. `./scripts/generate-docs.sh` — must succeed before merge when public Python modules or documented entrypoints change
+Does NOT own domain logic.
 
-Sibling repos enforce their own gates via `din_agents.shared.repo_profiles` (exposed to crews and tools).
+---
 
-## Documentation Strategy
+## 2. ROUTING (CRITICAL)
 
-- Prefer this `AGENTS.md`, `README.md`, and generated HTML under `docs/generated/` (after `./scripts/generate-docs.sh`) when you need module or public API structure.
-- Do not load generated docs by default; open them on demand to save tokens.
+Map task → repo:
 
-## Documentation Rules
+- "component / API / schema" → react-din
+- "runtime / compiler / validation" → din-core
+- "UI / editor / workflow / MCP" → din-studio
+- "automation / routing / crews" → din-agents
 
-- Public Python entrypoints (`main.py`, `flow.py`, `shared/*.py`, `tools/*.py`) should use Google-style docstrings for modules, classes, and public functions.
-- After changing public behavior, run `./scripts/generate-docs.sh` locally to confirm `pdoc` succeeds.
+If unclear → choose smallest scope
 
-## Operational notes
+---
 
-- Configure `DIN_CORE_PATH`, `REACT_DIN_PATH`, and `DIN_STUDIO_PATH` to local checkouts.
-- Repo profiles and quality gate commands live in `src/din_agents/shared/repo_profiles.py`.
+## 3. HOOKS (MANDATORY)
 
-## Documentation Access Order (CRITICAL)
+### HOOK: ROUTE_TASK
+IF task received:
 
-Always follow this sequence when gathering context. Do not skip steps.
+1. classify task
+2. select ONE repo
+3. STOP loading others
 
-1. This `AGENTS.md` — ownership, rules, quality gates
-2. `README.md` and `docs/FlowArchitecture.md` — hand-written index; use workspace `docs/README.md` when routing the whole stack
-3. Workspace summary `../docs/summaries/din-agents-api.md` (when using the `open-din` container) — compressed API overview
-4. `docs/generated/` from `./scripts/generate-docs.sh` — reference only, at most two pages at a time
-5. Source under `src/din_agents/` — last resort
+---
 
-## Context Budget Rules
+### HOOK: CROSS_REPO
+IF task involves:
 
-- Load at most two documentation files per step; close or stop using them before opening more
-- Load at most one repository’s context unless the task is explicitly cross-repo
-- Prefer summaries over generated HTML; prefer generated HTML over bulk source reads
-- Never bulk-load `docs/generated/` — open only the specific module pages needed
-- Minimize total loaded context at all times
+- schema
+- serialization
+- runtime + UI
 
-## Code Reading Policy
+THEN:
 
-- Do **not** read source files when documentation answers the question
-- Exhaust summaries and targeted generated docs before opening `src/`
-- When source reading is required, scope to the exact module — do not scan entire directories
+1. identify contract owner (source of truth)
+2. update owner FIRST
+3. propagate to consumers
 
-## Documentation Ownership
+---
 
-- This repository owns `docs/`, this `AGENTS.md`, and `docs/generated/` from pdoc
-- Workspace summaries (`open-din/docs/summaries/`) must stay consistent when flow, tools, or public modules change
-- A public control-plane or tool change is incomplete until docstrings, `FlowArchitecture.md`, and the matching summary are updated when the surface changes
+### HOOK: REPO_PROFILE
 
-## Documentation Freshness
+LOAD ONLY:
+- src/din_agents/shared/repo_profiles.py
 
-- Regenerate docs after public behavior changes (`./scripts/generate-docs.sh`)
-- Treat `docs/generated/` as ephemeral — do not treat stale output as authoritative
-- After regeneration, decide whether `../docs/summaries/din-agents-api.md` needs an update
-- Do not cite outdated documentation as authoritative
+USE:
+- repo-specific commands
+- quality gates
+
+---
+
+### HOOK: FLOW_EXECUTION
+
+IF task uses crew/flow:
+
+LOAD ONLY:
+- src/din_agents/flow.py
+- relevant crew module
+
+---
+
+### HOOK: DOCS
+
+IF missing info:
+
+LOAD (max 2):
+1. docs/summaries
+2. README / FlowArchitecture.md
+3. docs/generated
+
+STOP when sufficient
+
+---
+
+## 4. HARD CONSTRAINTS
+
+- ALWAYS start with 1 repo
+- NEVER load multiple repos by default
+- cross-repo ONLY if contract requires
+
+---
+
+### NEVER:
+
+- implement domain logic here
+- duplicate logic from other repos
+- modify multiple repos blindly
+
+---
+
+## 5. EXECUTION LOOP
+
+1. classify task
+2. route to repo
+3. load minimal context
+4. execute
+5. validate in target repo
+
+---
+
+## 6. CONTEXT LIMITS
+
+- max 1 repo (default)
+- max 2 files
+- NEVER scan repos
+- NEVER load all repos
+
+---
+
+## 7. SELF-OPTIMIZATION
+
+Continuously:
+
+- reduce repo scope
+- drop unused repos
+- minimize file loading
+
+If multiple repos loaded → reduce
+
+---
+
+## 8. LOAD DEEP CONTEXT ONLY IF
+
+- routing unclear
+- contract ambiguous
+- failing validation
+
+---
+
+## 9. VALIDATION
+
+uv run pytest  
+uv run ruff check src  
+
+(optional) generate-docs
