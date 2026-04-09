@@ -67,7 +67,7 @@ class DinCoreCrew:
         return Task(
             config=with_cli_task_config(self.tasks_config["assess_patch_contract"]),  # type: ignore[index]
             guardrail=din_core_require_tools_and_markdown,
-            guardrail_max_retries=4,
+            guardrail_max_retries=6,
         )
 
     @task
@@ -76,7 +76,7 @@ class DinCoreCrew:
             config=with_cli_task_config(self.tasks_config["review_registry_and_runtime"]),  # type: ignore[index]
             context=[],
             guardrail=din_core_require_tools_and_markdown,
-            guardrail_max_retries=4,
+            guardrail_max_retries=6,
         )
 
     @task
@@ -86,7 +86,7 @@ class DinCoreCrew:
             agent=self.rust_brief_runner(),
             context=[],
             guardrail=require_markdown_execution_brief,
-            guardrail_max_retries=4,
+            guardrail_max_retries=6,
         )
 
     @crew
