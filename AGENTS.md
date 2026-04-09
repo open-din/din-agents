@@ -3,10 +3,10 @@
 ## LOAD ORDER
 
 1. `AGENTS.md`
-2. `project/SUMMARY.md`
-3. `../docs/summaries/din-agents-api.md`
-4. `project/REPO_MANIFEST.json`
-5. One matching file in `project/skills/`
+2. `project/ROUTE_CARD.json`
+3. `../project/WORKSPACE_MANIFEST.json`
+4. One matching file in `project/skills/`
+5. The exact source file and exact test file
 
 ## ROUTE HERE WHEN
 
@@ -21,10 +21,10 @@
 
 ## ENTRY POINTS
 
+- `project/ROUTE_CARD.json`
 - `src/din_agents/flow.py`
 - `src/din_agents/shared/repo_profiles.py`
 - `src/din_agents/shared/rules.py`
-- `project/REPO_MANIFEST.json`
 
 ## SKILL MAP
 
@@ -37,6 +37,7 @@
 ## HARD RULES
 
 - Routing metadata comes from `../project/WORKSPACE_MANIFEST.json`.
+- Use `project/ROUTE_CARD.json` before loading repo summaries or API summaries.
 - Keep repo file tools scoped to one repo root.
 - Do not redefine sibling ownership in code without updating manifests and docs.
 

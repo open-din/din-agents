@@ -36,10 +36,16 @@ _FALLBACK_MANIFEST = {
                 "Do not implement Rust runtime logic here.",
             ],
             "validation_commands": ["npm run lint", "npm run typecheck", "npm run ci:check"],
+            "route_card_path": "project/ROUTE_CARD.json",
             "summary_path": "project/SUMMARY.md",
             "api_summary_path": "../docs/summaries/react-din-api.md",
             "repo_manifest_path": "project/REPO_MANIFEST.json",
             "skills_path": "project/skills",
+            "slice_manifest_paths": [
+                "project/SCHEMA_SECTION_SLICES.json",
+                "project/PUBLIC_EXPORT_SLICES.json",
+                "project/COVERAGE_MANIFEST.json",
+            ],
         },
         {
             "id": "din_core",
@@ -61,10 +67,12 @@ _FALLBACK_MANIFEST = {
                 "cargo clippy --workspace --all-targets -- -D warnings",
                 "cargo test --workspace",
             ],
+            "route_card_path": "project/ROUTE_CARD.json",
             "summary_path": "project/SUMMARY.md",
             "api_summary_path": "../docs/summaries/din-core-api.md",
             "repo_manifest_path": "project/REPO_MANIFEST.json",
             "skills_path": "project/skills",
+            "slice_manifest_paths": [],
         },
         {
             "id": "din_studio",
@@ -87,10 +95,17 @@ _FALLBACK_MANIFEST = {
                 "Do not own Rust runtime semantics here.",
             ],
             "validation_commands": ["npm run lint", "npm run typecheck", "npm run test", "npm run test:e2e"],
+            "route_card_path": "project/ROUTE_CARD.json",
             "summary_path": "project/SUMMARY.md",
             "api_summary_path": "../docs/summaries/din-studio-api.md",
             "repo_manifest_path": "project/REPO_MANIFEST.json",
             "skills_path": "project/skills",
+            "slice_manifest_paths": [
+                "project/EDITOR_NODE_SLICES.json",
+                "project/MCP_TOOL_SLICES.json",
+                "project/COVERAGE_MANIFEST.json",
+                "project/SURFACE_MANIFEST.json",
+            ],
         },
         {
             "id": "din_agents",
@@ -112,10 +127,12 @@ _FALLBACK_MANIFEST = {
                 "Do not own patch, runtime, or editor semantics.",
             ],
             "validation_commands": ["uv run pytest", "uv run ruff check src"],
+            "route_card_path": "project/ROUTE_CARD.json",
             "summary_path": "project/SUMMARY.md",
             "api_summary_path": "../docs/summaries/din-agents-api.md",
             "repo_manifest_path": "project/REPO_MANIFEST.json",
             "skills_path": "project/skills",
+            "slice_manifest_paths": [],
         },
     ],
 }
@@ -147,11 +164,13 @@ class RepoProfile(BaseModel):
     summary_path: str
     api_summary_path: str
     repo_manifest_path: str
+    route_card_path: str
     skills_path: str
+    slice_manifest_paths: list[str] = Field(default_factory=list)
 
     @property
     def context_files(self) -> list[str]:
-        return [self.summary_path, self.api_summary_path, self.repo_manifest_path]
+        return [self.route_card_path, *self.slice_manifest_paths[:2], self.api_summary_path]
 
 
 def _workspace_root() -> Path:
@@ -222,10 +241,15 @@ def _build_profile(entry: dict) -> RepoProfile:
             QualityGate(name=_quality_gate_name(command), command=command)
             for command in entry.get("validation_commands", [])
         ],
+        route_card_path=_resolve_context_path(repo_root, entry["path"], entry["route_card_path"]),
         summary_path=_resolve_context_path(repo_root, entry["path"], entry["summary_path"]),
         api_summary_path=_resolve_context_path(repo_root, entry["path"], entry["api_summary_path"]),
         repo_manifest_path=_resolve_context_path(repo_root, entry["path"], entry["repo_manifest_path"]),
         skills_path=_resolve_context_path(repo_root, entry["path"], entry["skills_path"]),
+        slice_manifest_paths=[
+            _resolve_context_path(repo_root, entry["path"], rel)
+            for rel in entry.get("slice_manifest_paths", [])
+        ],
     )
 
 

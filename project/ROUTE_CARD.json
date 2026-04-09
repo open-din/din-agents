@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "repo": "din-agents",
+  "role": "orchestration",
+  "route_when": [
+    "routing",
+    "quality gates",
+    "repo ownership metadata",
+    "control-plane prompts",
+    "workspace automation"
+  ],
+  "load_order": [
+    "project/ROUTE_CARD.json",
+    "../project/WORKSPACE_MANIFEST.json",
+    "project/skills/<matching-skill>/SKILL.md",
+    "exact source file",
+    "exact test file"
+  ],
+  "do_not_route": {
+    "react-din": [
+      "public patch schema",
+      "package exports"
+    ],
+    "din-core": [
+      "runtime semantics",
+      "registry",
+      "migration",
+      "FFI",
+      "WASM"
+    ],
+    "din-studio": [
+      "editor",
+      "MCP",
+      "launcher",
+      "shell workflows"
+    ]
+  },
+  "entry_points": [
+    "src/din_agents/flow.py",
+    "src/din_agents/shared/repo_profiles.py",
+    "src/din_agents/shared/rules.py",
+    "../project/WORKSPACE_MANIFEST.json"
+  ],
+  "task_slices": {
+    "routing": "src/din_agents/shared/rules.py",
+    "repo_profiles": "src/din_agents/shared/repo_profiles.py",
+    "flow": "src/din_agents/flow.py"
+  },
+  "hard_boundaries": [
+    "Routing metadata comes from ../project/WORKSPACE_MANIFEST.json.",
+    "Keep repo file tools scoped to one repo root.",
+    "Do not redefine sibling ownership in code without updating manifests."
+  ],
+  "validation_commands": [
+    "uv run pytest",
+    "uv run ruff check src"
+  ]
+}

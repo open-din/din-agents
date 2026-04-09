@@ -22,12 +22,14 @@ def test_react_din_route_card_points_to_schema_and_manifest():
 
     assert "Role: api" in rendered
     assert "schemas/patch.schema.json" in rendered
+    assert profile.route_card_path.endswith("react-din/project/ROUTE_CARD.json")
     assert profile.repo_manifest_path.endswith("react-din/project/REPO_MANIFEST.json")
 
 
 def test_din_studio_route_card_mentions_surface_and_mcp_entry_points():
     rendered = render_repo_profile("din_studio")
     assert "project/SURFACE_MANIFEST.json" in rendered
+    assert "project/MCP_TOOL_SLICES.json" in rendered
     assert "targets/mcp" in rendered
 
 

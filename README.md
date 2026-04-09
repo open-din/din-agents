@@ -6,7 +6,7 @@ Control plane for repo routing, quality-gate selection, and DIN workspace automa
 
 ## ENTRY FILES
 
-- `project/SUMMARY.md`
+- `project/ROUTE_CARD.json`
 - `src/din_agents/flow.py`
 - `src/din_agents/shared/repo_profiles.py`
 - `src/din_agents/shared/rules.py`

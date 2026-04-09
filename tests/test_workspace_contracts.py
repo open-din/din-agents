@@ -21,6 +21,13 @@ def test_workspace_manifest_and_repo_manifests_stay_aligned():
         assert repo_manifest["id"] == entry["id"]
         assert repo_manifest["role"] == entry["role"]
         assert repo_manifest["entry_points"] == entry["entry_points"]
+        assert repo_manifest["route_card_path"] == entry["route_card_path"]
+        assert sorted(repo_manifest["linked_manifests"]) == sorted(entry["slice_manifest_paths"])
+
+        route_card_path = WORKSPACE_ROOT / entry["path"] / entry["route_card_path"]
+        assert route_card_path.is_file()
+        for rel in entry["slice_manifest_paths"]:
+            assert (WORKSPACE_ROOT / entry["path"] / rel).is_file()
 
 
 def test_workspace_router_and_invariants_have_required_sections():
@@ -55,6 +62,19 @@ def test_summary_and_api_summary_budgets_stay_compact():
     for path in api_summaries:
         assert _line_count(path) <= 180
         assert _word_count(path) <= 220
+
+
+def test_route_cards_stay_compact():
+    route_cards = [
+        WORKSPACE_ROOT / "react-din/project/ROUTE_CARD.json",
+        WORKSPACE_ROOT / "din-core/project/ROUTE_CARD.json",
+        WORKSPACE_ROOT / "din-studio/project/ROUTE_CARD.json",
+        WORKSPACE_ROOT / "din-agents/project/ROUTE_CARD.json",
+    ]
+
+    for path in route_cards:
+        assert _line_count(path) <= 120
+        assert _word_count(path) <= 260
 
 
 def test_readme_intro_exposes_agent_navigation_headings():

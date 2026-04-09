@@ -46,6 +46,7 @@
       "uv run pytest",
       "uv run ruff check src"
     ],
+    "route_card_path": "project/ROUTE_CARD.json",
     "summary_path": "project/SUMMARY.md",
     "api_summary_path": "../docs/summaries/din-agents-api.md",
     "repo_manifest_path": "project/REPO_MANIFEST.json",
